@@ -4,12 +4,21 @@ The deck and the narrated video are **generated from measured results** and are 
 
 | Asset | Path | Notes |
 |---|---|---|
-| Video, 1:46 | `docs/video/phishguard_2min.mp4` | 1920×1080 H.264 + AAC, narrated (macOS `say`, voice Samantha); under the 2:00 limit |
-| Slides | `docs/slides.pdf` and `docs/slides/slide_01.png` … `slide_09.png` | 9 slides, 16:9; the same deck works for the live final |
+| Video, 1:50 | `docs/video/phishguard_2min.mp4` | 1920×1080 H.264 + AAC, narrated (macOS `say`, voice Samantha); under the 2:00 limit; animated demo |
+| Slides | `docs/slides.pdf` and `docs/slides/slide_01.png` … `slide_10.png` | 10 slides, 16:9, labeled by demo section; the same deck works for the live final |
 | Narration | `docs/VIDEO_SCRIPT.md` | Per-slide script with timestamps |
 | Generator | `scripts/make_media.py` | `uv run python scripts/make_media.py` rebuilds all of the above (needs Chrome, `say`, ffmpeg) |
 
 Every number on screen comes from `results/summary.md`: 600 identical held-out cases, 95% bootstrap CIs, paired McNemar tests.
+
+## 0. Required demo structure (organizers) and where it is covered
+
+| Required part | Slides | What we show |
+|---|---|---|
+| **1. The Problem**: what we solve and why it matters | 1–2 | Scams hit email, SMS, links and calls; teams must screen everything before the click; frontier screening costs $1,600 per 1M messages |
+| **2. Tech Stack**: what we used, what it enabled, what would have been impossible without it | 3–4 | Fireworks Serverless Training (LoRA on a 120B model in ~11 min for ~$2.20: no GPUs, no upload, no deployment), Fireworks serverless inference (frontier baselines through one API), NVIDIA Nemotron 3.5 Super (open, self-hostable), Hugging Face data and the eval harness |
+| **3. Live Demo + Code**: the product in action, then the code | 5–7 | Animated terminal run on held-out messages (ours vs Kimi K3, $ per line), then the training loop and the features/scoring code |
+| **Key: before / after fine-tuning numbers** | 8 (and 1, 9, 10) | Same model, same prompt: **90.7% → 97.8%** accuracy, errors **56 → 13** (−77%), false positives **15.0% → 1.0%**, call false alarms **34% → 2%**, every channel up; one honest regression (later unseen corpus 87.0% → 85.5%) |
 
 ## 1. What the judges score (from the event slides)
 
@@ -49,37 +58,39 @@ The NVIDIA engineer's BANKING77 deck is effectively the template the judges expe
 
 ## 3. Slide by slide
 
-| # | Slide | One message | Rubric |
+| # | Section | Slide | One message |
 |---|---|---|---|
-| 1 | Title | A fine-tuned NVIDIA Nemotron beats a frontier model at scam screening: 97.8% vs 96.2%, ~7× cheaper | All |
-| 2 | Problem and user | Fraud teams must screen every channel before the click; frontier screening costs $1,600 per 1M messages | Business value |
-| 3 | One evaluation, frozen | 2,400 train / 600 held-out / 4 channels, plus drift and early-warning sets | Benchmark |
-| 4 | Four systems, same cases | Same prompt and scoring for every system; ours is the only change | Benchmark |
-| 5 | Lightweight training run | Rank-16 LoRA, 1 epoch, ~11 min, ~$2.20, no upload or deployment | Technical |
-| 6 | Accuracy and cost | 13 vs 23 errors (Kimi K3), p = 0.041, +43 correct vs untuned | Benchmark |
-| 7 | Demo | Held-out items: our recorded verdicts vs live Kimi K3, with $ per line; both miss one URL | Presentation |
-| 8 | Timing and tradeoff | 96% of scam calls caught after 25% of the call with 2% false alarms (Kimi K3: 14%); frontier wins on drift | Technical, honesty |
-| 9 | Why adopt | ~7× cheaper, 23× smaller, self-hostable; repo for reproduction | Business value |
+| 1 | Problem | Title | Fine-tuning takes Nemotron from 90.7% to 97.8%, beating Kimi K3 (96.2%) at ~7× lower cost |
+| 2 | Problem | Problem and user | Every channel, before the click; frontier screening is too expensive to run on everything |
+| 3 | Tech stack | What the stack made possible | Each tool, what it enabled, and what was impossible without it |
+| 4 | Tech stack | The evaluation | 2,400 train / 600 held-out; four systems, same prompt, same scoring |
+| 5 | Live demo | Animated terminal run | Held-out messages: our verdicts (recorded) vs live Kimi K3, $ per line; both miss one URL |
+| 6 | Code | Training loop | LoRA client, loss masked to the answer tokens, forward/backward, optimizer step, checkpoint |
+| 7 | Code | Features and scoring | Metadata + timing cues into the prompt, JSON label out, paired McNemar on the same cases |
+| 8 | **Results** | **Before vs after fine-tuning** | 90.7% → 97.8%; errors 56 → 13; FPR 15% → 1%; call false alarms 34% → 2%; per-channel gains; one regression |
+| 9 | Results | vs the frontier | 13 vs 23 errors (p = 0.041), ~7× cheaper; tradeoff on newer unseen data |
+| 10 | Close | Why adopt | +7.1 points from fine-tuning, ~7× cheaper, 23× smaller, self-hostable |
 
 ## 4. Video timeline (from `docs/VIDEO_SCRIPT.md`)
 
-| Time | Slide |
-|---|---|
-| 0:00–0:08 | 1 Title |
-| 0:08–0:23 | 2 Problem and user |
-| 0:23–0:33 | 3 One evaluation |
-| 0:33–0:42 | 4 Four systems |
-| 0:42–0:50 | 5 Training run |
-| 0:50–1:05 | 6 Accuracy and cost |
-| 1:05–1:13 | 7 Demo |
-| 1:13–1:33 | 8 Timing and tradeoff |
-| 1:33–1:46 | 9 Why adopt |
+| Time | Section | Slide |
+|---|---|---|
+| 0:00–0:07 | Problem | 1 Title |
+| 0:07–0:21 | Problem | 2 Problem and user |
+| 0:21–0:38 | Tech stack | 3 What the stack made possible |
+| 0:38–0:46 | Tech stack | 4 The evaluation |
+| 0:46–0:56 | Live demo | 5 Animated terminal run |
+| 0:56–1:06 | Code | 6 Training loop |
+| 1:06–1:15 | Code | 7 Features and scoring |
+| 1:15–1:29 | **Results** | **8 Before vs after fine-tuning** |
+| 1:29–1:43 | Results | 9 vs the frontier |
+| 1:43–1:50 | Close | 10 Why adopt |
 
 Prefer a human voice? Read `docs/VIDEO_SCRIPT.md` over the slides with QuickTime (File → New Screen Recording, microphone on), keep it under 2:00, and export 1080p MP4.
 
 ## 5. Live final (if selected)
 
-- Present the same 9 slides from `docs/slides.pdf`, about 15 s each.
+- Present the same 10 slides from `docs/slides.pdf` in the required order: Problem (1–2), Tech Stack (3–4), Live Demo + Code (5–7), then before/after (8).
 - **Live demo option:**
   ```bash
   uv run python scripts/demo.py --models ft-nemotron-super kimi-k3                # ours (recorded) vs Kimi K3 (live)
@@ -96,8 +107,8 @@ Prefer a human voice? Read `docs/VIDEO_SCRIPT.md` over the slides with QuickTime
 
 ## 6. Checklist before uploading (video by 4:00 PM)
 
-- [x] Video ≤ 2:00 (1:46), audio clear, numbers match `results/summary.md`
-- [x] Shows problem, approach, demo and measured result vs. the frontier baseline
+- [x] Video ≤ 2:00 (1:50), audio clear, numbers match `results/summary.md`
+- [x] Follows Problem → Tech Stack → Live Demo + Code, and shows the before/after fine-tuning numbers
 - [x] Mentions the tradeoff (drift) and the NVIDIA Nemotron usage
 - [x] `docs/slides.pdf` committed; README links to the video and slides
 - [ ] Team names in the README Team section

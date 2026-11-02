@@ -2,7 +2,7 @@
 
 **Fireworks: Deploy with Microsoft & NVIDIA** (HackerSquad, Nov 2 2026). Sponsor track: **NVIDIA Best-Use**, using an NVIDIA Nemotron 3.5 Super model LoRA-fine-tuned on Fireworks Serverless Training.
 
-**Demo video (1:46):** [`docs/video/phishguard_2min.mp4`](docs/video/phishguard_2min.mp4) · **Slides:** [`docs/slides.pdf`](docs/slides.pdf) · **Guide:** [`docs/DEMO_GUIDE.md`](docs/DEMO_GUIDE.md)
+**Demo video (1:50):** [`docs/video/phishguard_2min.mp4`](docs/video/phishguard_2min.mp4) · **Slides:** [`docs/slides.pdf`](docs/slides.pdf) · **Guide:** [`docs/DEMO_GUIDE.md`](docs/DEMO_GUIDE.md)
 
 ## Who it is for, and why it matters
 
