@@ -9,16 +9,24 @@ Owns everything that runs on Fireworks: jobs, deployments, spend. Works on the l
 | When | Task | Done when |
 |---|---|---|
 | Now | Confirm the FT-meta job is running (`firectl sftj list`). If it isn't, launch it: `uv run python scripts/finetune_api.py`. Launch FT-text only if spend allows | Job shows RUNNING/COMPLETED |
-| Now → 2:15 | Finish the baselines: Nemotron base `meta` on test_temporal / test_ood / voice_prefix / test_realcalls, `text` on test + test_temporal; Kimi K3 reasoning-on ceiling (200 cases) | Files appear in `results/` |
+| Now → 2:15 | Finish the Nemotron base baselines: `meta` on voice_prefix / test_realcalls (test, test_temporal, test_ood are done), `text` on test_temporal | Files appear in `results/` |
 | ~2:15 | Check spend on the billing page. Over $35 → drop FT-text and the ceiling run | Spend noted in `#status` below |
 | FT ~⅔ done | Create the deployment for the fine-tuned model | Deployment READY |
 | FT done | Smoke test 5 cases → eval FT on every test set → latency runs → **delete the deployment** | `results/ft-*` files exist; `firectl deployment list` is empty |
 | ~2:50 | Commit and push `results/`, then tell Kris "FT results are in" | Pushed |
 | 3:30–4:00 | Upload the demo video (**by 4:00**) | Video processed |
 
-## Kris: evidence and story
+## Kris: evidence and story, plus a second Fireworks account
 
-Owns everything judges read. Needs only the repo; optionally run `uv sync` and `uv run python scripts/build_data.py` to inspect the data.
+Owns everything judges read. Kris also has separate Fireworks credits, which doubles our budget and rate limit, so Kris runs the extra experiments in parallel on their own account.
+
+**Setup (about 10 min):** `git clone`, then `uv sync`, then `cp .env.example .env` and add Kris's own API key, then `uv run python scripts/build_data.py`. The data build is seeded, so check that `data/manifest.json` sha256s match John's. Same data = comparable results.
+
+**Kris's Fireworks runs (start right after setup):**
+- Kimi K3 reasoning-on ceiling, 200 cases (the most expensive run, ~$3–5, moved off John's budget).
+- Stretch baselines, if time allows: a third frontier model (`glm-5p3` or `qwen3p8-max`).
+- FT-text ablation (fine-tune on text-only prompts) on Kris's account, if John's spend is above $30. Note that a fine-tuned model lives in, and is deployed from, the account that trained it, so Kris deploys and evals it themselves, then **deletes the deployment**.
+- Kris commits only the result files from their runs (`results/<model>__*.jsonl`); John's and Kris's result filenames never collide because the model names differ.
 
 | When | Task | Done when |
 |---|---|---|
@@ -41,7 +49,9 @@ Owns everything judges read. Needs only the repo; optionally run `uv sync` and `
 ## Git rules (to avoid conflicts)
 
 - `git pull --rebase` before every push; commit small and often.
-- **John** commits `results/`, `config/` and `scripts/`. **Kris** commits `README.md` and `docs/`.
+- **John** commits `config/`, `scripts/`, `src/` and their own result files. **Kris** commits `README.md`, `docs/` and their own result files (`results/kimi-k3-reasoning__*`, stretch and FT-text runs).
+- Only one person runs `make report` and commits `results/summary.md` / `metrics.json` / charts at a time: Kris, at the ~2:50 merge.
+- Serverless results are comparable across accounts (same models, same frozen data). Each fine-tuned model must be served from the account that trained it.
 - Never commit `.env` (it's git-ignored). Never change eval results after 4:30.
 
 ## Status
