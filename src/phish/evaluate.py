@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import asyncio
 import hashlib
 import json
@@ -23,7 +24,7 @@ from .client import ROOT, classify, make_client, model_cfg
 from .prompt import build_messages
 
 DATA = ROOT / "data"
-RESULTS = ROOT / "results"
+RESULTS = Path(os.environ.get("PHISH_RESULTS", ROOT / "results"))
 
 
 def sha256(path: Path) -> str:
@@ -75,6 +76,7 @@ async def run(m: dict, recs: list[dict], variant: str, split: str, out: Path, co
     rows = await tqdm_asyncio.gather(*(one(r) for r in recs), desc=f"{m['key']}/{variant}/{split}")
     wall = time.perf_counter() - t0
     fh.close()
+    await client.close()
     ok = [x for x in rows if x["error"] is None]
     if ok:
         acc = sum(x["pred"] == x["label"] for x in ok) / len(ok)

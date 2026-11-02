@@ -1,0 +1,107 @@
+{
+  "generated_at": "2026-11-02T21:13:51.653026+00:00",
+  "models": {
+    "rules": {
+      "label": "Rules on metadata (no model)",
+      "size": "n/a",
+      "serving": "local",
+      "variant": "meta",
+      "quality": {
+        "n": 600,
+        "acc": 0.7433333333333333,
+        "f1": 0.7458745874587458,
+        "precision": 0.738562091503268,
+        "recall": 0.7533333333333333,
+        "fpr": 0.26666666666666666,
+        "parse_fail": 0.0,
+        "errors": 0,
+        "acc_ci": [
+          0.7083333333333334,
+          0.7766666666666666
+        ],
+        "f1_ci": [
+          0.7042624854819978,
+          0.7859411899411757
+        ]
+      },
+      "efficiency": {
+        "in_tokens": 0.0,
+        "out_tokens": 0.0,
+        "reasoning_tokens": 0.0,
+        "usd_per_1m_msgs": 0.0,
+        "cost_basis": "local CPU"
+      },
+      "latency": {
+        "p50_s": 7.50063918530941e-07,
+        "p95_s": 9.170034900307655e-07,
+        "within_budget": 1.0,
+        "server_ttft_p50_s": null,
+        "basis": "eval run (concurrent)"
+      },
+      "per_channel_f1": {
+        "email": 0.6024096385542168,
+        "sms": 0.7751937984496123,
+        "url": 0.7425149700598803,
+        "voice": 0.888888888888889
+      }
+    }
+  },
+  "paired": {},
+  "notes": [],
+  "temporal": {
+    "rules/meta": {
+      "f1_test_email": 0.6024096385542168,
+      "f1_2008": 0.669260700389105,
+      "f1_2008_ci": [
+        0.6042509769865393,
+        0.7313432835820894
+      ]
+    }
+  },
+  "ablation": {},
+  "early_warning": {
+    "rules": {
+      "25%": {
+        "recall": 0.44,
+        "fpr": 0.0
+      },
+      "50%": {
+        "recall": 0.62,
+        "fpr": 0.0
+      },
+      "75%": {
+        "recall": 0.82,
+        "fpr": 0.08
+      },
+      "100%": {
+        "recall": 0.84,
+        "fpr": 0.1
+      }
+    }
+  },
+  "ood": {
+    "rules": {
+      "n": 200,
+      "acc": 0.705,
+      "f1": 0.7686274509803921,
+      "precision": 0.632258064516129,
+      "recall": 0.98,
+      "fpr": 0.57,
+      "parse_fail": 0.0,
+      "errors": 0,
+      "acc_ci": [
+        0.64,
+        0.765
+      ],
+      "f1_ci": [
+        0.7107303086523866,
+        0.819548872180451
+      ],
+      "urgency_subset_acc": 0.6459627329192547,
+      "hard_negative_fpr": 0.57
+    }
+  },
+  "realcalls_recall": {
+    "rules": 0.5
+  }
+}
