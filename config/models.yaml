@@ -1,0 +1,118 @@
+# Single source of truth for model ids, sizes, prices and request settings.
+# Prices are $ per 1M tokens from the Fireworks serverless pricing page, checked 2026-11-02.
+# `extra_body` is passed straight to the Fireworks chat-completions API.
+
+defaults:
+  temperature: 0
+  max_tokens: 16
+  structured_output: true   # response_format = json_schema with the label enum
+  est_out_tokens: 8         # used only for the pre-run cost projection
+
+latency_budget_s:           # per-channel "act before the victim does" budgets
+  url: 0.5
+  sms: 1.0
+  chat: 1.0
+  voice: 1.0
+  email: 2.0
+
+models:
+  # ---- ours: LoRA adapters on Nemotron, served from one on-demand deployment ----
+  ft-meta:
+    id_env: FT_META_MODEL            # set after scripts/deploy.sh
+    label: "Nemotron-30B-A3B + LoRA (meta) [ours]"
+    role: ours
+    params_total_b: 30
+    params_active_b: 3
+    serving: dedicated
+    gpu_hour_usd: 8.0
+  ft-text:
+    id_env: FT_TEXT_MODEL
+    label: "Nemotron-30B-A3B + LoRA (text-only)"
+    role: ablation
+    params_total_b: 30
+    params_active_b: 3
+    serving: dedicated
+    gpu_hour_usd: 8.0
+  nemotron-dedicated:
+    id_env: BASE_DEDICATED_MODEL     # bare base on our deployment: same-hardware latency comparison
+    label: "Nemotron-30B-A3B base (dedicated)"
+    role: base
+    params_total_b: 30
+    params_active_b: 3
+    serving: dedicated
+    gpu_hour_usd: 8.0
+
+  # ---- before: the untuned base on serverless ----
+  nemotron-base:
+    id: accounts/fireworks/models/nemotron-lightning-3p5-30b-a3b
+    label: "Nemotron-30B-A3B base"
+    role: base
+    params_total_b: 30
+    params_active_b: 3
+    serving: serverless
+    price_in: 0.05
+    price_cached_in: 0.01
+    price_out: 0.20
+    extra_body: {}
+
+  # ---- frontier baselines ----
+  kimi-k3:
+    id: accounts/fireworks/models/kimi-k3
+    label: "Kimi K3 (2.8T)"
+    role: frontier
+    params_total_b: 2810
+    params_active_b: null
+    serving: serverless
+    price_in: 3.00
+    price_cached_in: 0.30
+    price_out: 15.00
+    extra_body: {reasoning_effort: "none"}
+  kimi-k3-reasoning:
+    id: accounts/fireworks/models/kimi-k3
+    label: "Kimi K3 (2.8T) + reasoning"
+    role: frontier-ceiling
+    params_total_b: 2810
+    params_active_b: null
+    serving: serverless
+    price_in: 3.00
+    price_cached_in: 0.30
+    price_out: 15.00
+    max_tokens: 4096
+    structured_output: false         # json_schema disables reasoning output; parse the final answer instead
+    est_out_tokens: 1500
+    extra_body: {reasoning_effort: "medium"}
+  deepseek-v4p1-flash:
+    id: accounts/fireworks/models/deepseek-v4p1-flash
+    label: "DeepSeek V4.1 Flash (552B)"
+    role: frontier
+    params_total_b: 552
+    params_active_b: 16
+    serving: serverless
+    price_in: 0.30
+    price_cached_in: 0.006
+    price_out: 1.20
+    extra_body: {reasoning_effort: "none"}
+
+  # ---- stretch ----
+  glm-5p3:
+    id: accounts/fireworks/models/glm-5p3
+    label: "GLM 5.3 (743B)"
+    role: frontier
+    params_total_b: 743
+    params_active_b: null
+    serving: serverless
+    price_in: 1.40
+    price_cached_in: 0.26
+    price_out: 4.40
+    extra_body: {reasoning_effort: "none"}
+  qwen3p8-max:
+    id: accounts/fireworks/models/qwen3p8-max
+    label: "Qwen 3.8 Max"
+    role: frontier
+    params_total_b: null
+    params_active_b: null
+    serving: serverless
+    price_in: 2.00
+    price_cached_in: 0.25
+    price_out: 6.00
+    extra_body: {reasoning_effort: "none"}
