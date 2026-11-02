@@ -313,8 +313,14 @@ def main() -> None:
                                         "f1_2008": quality(b, rng)["f1"], "f1_2008_ci": quality(b, rng).get("f1_ci")}
         gm = test[(test["model"] == k) & (test["variant"] == "meta")]
         gt = test[(test["model"] == k) & (test["variant"] == "text")]
-        if not gm.empty and not gt.empty:
-            ablation[k] = {"f1_meta": quality(gm, rng, ci=False)["f1"], "f1_text": quality(gt, rng, ci=False)["f1"]}
+        common = set(gm["id"]) & set(gt["id"])
+        if gm.empty or gt.empty:
+            pass
+        elif len(common) < 0.95 * len(gm):  # a stopped text-only run would compare different cases
+            metrics["notes"].append(f"metadata ablation for {label(k)} omitted: text-only run covers {len(common)}/{len(gm)} cases")
+        else:
+            ablation[k] = {"f1_meta": quality(gm[gm["id"].isin(common)], rng, ci=False)["f1"],
+                           "f1_text": quality(gt[gt["id"].isin(common)], rng, ci=False)["f1"], "n": len(common)}
         pre = ev[(ev["model"] == k) & (ev["split"] == "voice_prefix") & (ev["variant"] == "meta")]
         if len(pre) >= 270:  # only complete runs: a partial prefix set gives misleading per-step rates
             curve = {}

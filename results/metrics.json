@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-02T22:26:48.970140+00:00",
+  "generated_at": "2026-11-02T22:41:48.793838+00:00",
   "models": {
     "ft-nemotron-super": {
       "label": "Nemotron 3.5 Super 120B-A12B + LoRA [ours]",
@@ -535,7 +535,9 @@
       ]
     }
   },
-  "notes": [],
+  "notes": [
+    "metadata ablation for Nemotron-30B-A3B base omitted: text-only run covers 122/600 cases"
+  ],
   "temporal": {
     "ft-nemotron-super/meta": {
       "f1_test_email": 0.9729729729729729,
@@ -629,15 +631,13 @@
   "ablation": {
     "kimi-k3": {
       "f1_meta": 0.9612141652613828,
-      "f1_text": 0.9593220338983052
+      "f1_text": 0.9593220338983052,
+      "n": 600
     },
     "deepseek-v4p1-flash": {
       "f1_meta": 0.9355371900826447,
-      "f1_text": 0.9246231155778895
-    },
-    "nemotron-base": {
-      "f1_meta": 0.8854961832061069,
-      "f1_text": 0.9343065693430657
+      "f1_text": 0.9246231155778895,
+      "n": 600
     }
   },
   "early_warning": {
