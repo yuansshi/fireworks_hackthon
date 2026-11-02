@@ -16,6 +16,28 @@ latency_budget_s:           # per-channel "act before the victim does" budgets
   email: 2.0
 
 models:
+  # ---- ours: LoRA fine-tuned on Fireworks Serverless Training (no upload, no deployment) ----
+  ft-nemotron-super:
+    id: accounts/fireworks/models/nvidia-nemotron-3p5-super-vl-120b-a12b-bf16   # base; adapter lives in a training session
+    label: "Nemotron 3.5 Super 120B-A12B + LoRA [ours]"
+    role: ours
+    params_total_b: 120
+    params_active_b: 12
+    serving: serverless-training      # sampled in the training session; per-token prices below
+    price_in: 0.57
+    price_cached_in: 0.114
+    price_out: 1.44
+  nemotron-super-base:
+    id: accounts/fireworks/models/nvidia-nemotron-3p5-super-vl-120b-a12b-bf16
+    label: "Nemotron 3.5 Super 120B-A12B base"
+    role: base
+    params_total_b: 120
+    params_active_b: 12
+    serving: serverless-training
+    price_in: 0.57
+    price_cached_in: 0.114
+    price_out: 1.44
+
   # ---- ours: LoRA adapters on Nemotron, served from one on-demand deployment ----
   ft-meta:
     id_env: FT_META_MODEL            # set after scripts/deploy.sh

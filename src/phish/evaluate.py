@@ -22,6 +22,7 @@ from tqdm.asyncio import tqdm_asyncio
 
 from .client import ROOT, classify, make_client, model_cfg
 from .prompt import build_messages
+from .retrieval import build_knn_messages
 
 DATA = ROOT / "data"
 RESULTS = Path(os.environ.get("PHISH_RESULTS", ROOT / "results"))
@@ -43,10 +44,14 @@ def stratified(recs: list[dict], per_cell: int) -> list[dict]:
     return [r for group in cells.values() for r in group[:per_cell]]
 
 
+def messages_for(r: dict, variant: str) -> list[dict]:
+    return build_knn_messages(r) if variant == "knn" else build_messages(r, variant)
+
+
 def projected_cost(m: dict, recs: list[dict], variant: str) -> float:
     if m.get("serving") != "serverless":
         return 0.0
-    tokens_in = sum(len(json.dumps(build_messages(r, variant))) / 3.5 for r in recs)
+    tokens_in = sum(len(json.dumps(messages_for(r, variant))) / 3.5 for r in recs)
     return (tokens_in * m["price_in"] + len(recs) * m.get("est_out_tokens", 8) * m["price_out"]) / 1e6
 
 
@@ -58,7 +63,7 @@ async def run(m: dict, recs: list[dict], variant: str, split: str, out: Path, co
 
     async def one(r: dict):
         async with sem:
-            res = await classify(client, m, build_messages(r, variant))
+            res = await classify(client, m, messages_for(r, variant))
         row = {
             "id": r["id"], "channel": r["channel"], "label": r["label"], **res,
             "parse_ok": res["pred"] is not None, "model": m["key"], "model_id": m["id"],
@@ -94,7 +99,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
     ap.add_argument("--model-id", help="override the model id (e.g. a deployed adapter)")
-    ap.add_argument("--variant", choices=["meta", "text"], default="meta")
+    ap.add_argument("--variant", choices=["meta", "text", "knn"], default="meta")
     ap.add_argument("--split", nargs="+", default=["test"])
     ap.add_argument("--per-cell", type=int, help="stratified subset: N per channel x label")
     ap.add_argument("--limit", type=int)
@@ -105,6 +110,8 @@ def main() -> None:
     args = ap.parse_args()
 
     m = model_cfg(args.model, args.model_id)
+    if m.get("serving") == "serverless-training":
+        raise SystemExit(f"{args.model} is sampled inside a training session: use scripts/train_serverless.py eval")
     splits = args.split
     if args.mode != "eval":
         splits = ["test"]

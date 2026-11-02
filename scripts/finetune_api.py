@@ -4,6 +4,9 @@
     uv run python scripts/finetune_api.py launch meta      # FT-meta (primary)
     uv run python scripts/finetune_api.py launch text      # FT-text (metadata ablation)
     uv run python scripts/finetune_api.py status [JOB_ID]  # one job, or all recent jobs
+    uv run python scripts/finetune_api.py deploy [MODEL]   # on-demand deployment (default: Nemotron base, addons on)
+    uv run python scripts/finetune_api.py deployments      # list deployments (billing runs while replicas are up)
+    uv run python scripts/finetune_api.py undeploy DEP_ID  # delete a deployment: stops GPU billing
 """
 
 from __future__ import annotations
@@ -99,7 +102,42 @@ def status(job_id: str | None) -> None:
         print("no fine-tuning jobs yet")
 
 
+def deploy(model: str) -> None:
+    c, acct = client()
+    body = {"baseModel": model, "deploymentShape": "default", "minReplicaCount": 0, "maxReplicaCount": 1,
+            "autoscalingPolicy": {"scaleToZeroWindow": "600s"}}
+    if model == BASE_MODEL:
+        body["enableAddons"] = True  # lets fine-tuned LoRA adapters load onto the same GPU later
+    dep = check(c.post(f"/accounts/{acct}/deployments", json=body))
+    dep_id = dep["name"].split("/")[-1]
+    print(json.dumps({k: dep.get(k) for k in ("name", "state", "baseModel", "acceleratorType", "acceleratorCount")}, indent=2))
+    print(f"\nQuery it as:  {model}#accounts/{acct}/deployments/{dep_id}")
+    print(f"Delete with:  uv run python scripts/finetune_api.py undeploy {dep_id}")
+
+
+def deployments() -> None:
+    c, acct = client()
+    deps = check(c.get(f"/accounts/{acct}/deployments")).get("deployments", [])
+    for d in deps:
+        print(f"{d['name'].split('/')[-1]:30s} {d.get('state'):12s} {d.get('baseModel', '')}  "
+              f"{d.get('acceleratorCount')}x{d.get('acceleratorType')} replicas={d.get('replicaCount')}")
+    if not deps:
+        print("no deployments (nothing billing)")
+
+
+def undeploy(dep_id: str) -> None:
+    c, acct = client()
+    check(c.delete(f"/accounts/{acct}/deployments/{dep_id}"))
+    print(f"deleted {dep_id}")
+    deployments()
+
+
 if __name__ == "__main__":
+    cmds = {"deploy": lambda a: deploy(a[0] if a else BASE_MODEL), "deployments": lambda a: deployments(),
+            "undeploy": lambda a: undeploy(a[0])}
+    if len(sys.argv) >= 2 and sys.argv[1] in cmds:
+        cmds[sys.argv[1]](sys.argv[2:])
+        sys.exit(0)
     if len(sys.argv) < 2 or sys.argv[1] not in ("launch", "status"):
         raise SystemExit(__doc__)
     if sys.argv[1] == "launch":

@@ -19,6 +19,7 @@ dependencies = [
   "python-dotenv",
   "httpx>=0.28.1",
   "truststore>=0.10.5",
+  "fireworks-ai[training]>=1.2.30",
 ]
 
 [build-system]

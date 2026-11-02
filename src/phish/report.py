@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timezone
 
 import matplotlib
@@ -20,13 +21,13 @@ from scipy.stats import binomtest
 from .client import load_config
 from .evaluate import DATA, RESULTS, read_jsonl, sha256
 
-OURS = "ft-meta"
+OURS = "ft-meta"  # replaced at runtime by pick_ours()
 N_BOOT = 1000
 SPLITS = ["test", "test_temporal", "test_ood", "voice_prefix", "test_realcalls"]
 # Fixed categorical order (validated default palette): a model keeps its color in every chart.
 COLORS = {
-    "ft-meta": "#2a78d6", "kimi-k3": "#eb6834", "deepseek-v4p1-flash": "#1baf7a", "nemotron-base": "#eda100",
-    "ft-text": "#e87ba4", "rules": "#008300", "kimi-k3-reasoning": "#6250d6", "nemotron-dedicated": "#e34948",
+    "ft-nemotron-super": "#2a78d6", "ft-meta": "#2a78d6", "kimi-k3": "#eb6834", "deepseek-v4p1-flash": "#1baf7a", "nemotron-base": "#eda100",
+    "ft-text": "#e87ba4", "rules": "#008300", "kimi-k3-reasoning": "#6250d6", "nemotron-base+knn": "#e34948", "cascade": "#52514e", "cascade3": "#8a6d3b", "nemotron-super-base": "#c98500",
 }
 INK, INK2, SURFACE, GRID = "#0b0b0b", "#52514e", "#fcfcfb", "#e4e3df"
 ORDER = list(COLORS)
@@ -39,6 +40,8 @@ def load_results() -> tuple[pd.DataFrame, list[str]]:
     current = {s: sha256(DATA / f"{s}.jsonl") for s in SPLITS if (DATA / f"{s}.jsonl").exists()}
     for p in sorted(RESULTS.glob("*__*__*.jsonl")):
         model, variant, tag = p.stem.split("__")
+        if model.startswith("smoke"):
+            continue  # plumbing checks, not results
         rows = read_jsonl(p)
         if not rows:
             continue
@@ -48,6 +51,8 @@ def load_results() -> tuple[pd.DataFrame, list[str]]:
             continue
         df = pd.DataFrame(rows)
         df["model"], df["variant"], df["tag"] = model, variant, tag
+        if variant == "knn":  # retrieval-augmented harness = a separate system on the meta prompt
+            df["model"], df["variant"] = f"{model}+knn", "meta"
         # resumed runs may hold an error row and a later success for the same id: keep the success
         df["_ok"] = df["error"].isna()
         df = df.sort_values("_ok").drop_duplicates("id", keep="last")
@@ -55,6 +60,42 @@ def load_results() -> tuple[pd.DataFrame, list[str]]:
     if not frames:
         raise SystemExit("no results yet: run phish.rules or phish.evaluate first")
     return pd.concat(frames, ignore_index=True), notes
+
+
+# Routing across open models (rules fixed a priori, nothing tuned on test): cheap voters answer when
+# they all agree; any disagreement escalates the item to the frontier model.
+CASCADES = {
+    "cascade": (("nemotron-base", "nemotron-base+knn"), "kimi-k3"),
+    "cascade3": (("nemotron-base", "nemotron-base+knn", "deepseek-v4p1-flash"), "kimi-k3"),
+}
+
+
+def add_cascades(df: pd.DataFrame) -> pd.DataFrame:
+    rows = []
+    meta = df[df["tag"].isin(SPLITS) & (df["variant"] == "meta")]
+    for name, (voters, judge) in CASCADES.items():
+        for split, g in meta.groupby("split"):
+            frames = [g[g["model"] == m].set_index("id") for m in (*voters, judge)]
+            ids = frames[0].index
+            for f in frames[1:]:
+                ids = ids.intersection(f.index)
+            for i in ids:
+                vs = [f.loc[i] for f in frames[:-1]]
+                rj = frames[-1].loc[i]
+                preds = [v["pred"] for v in vs]
+                esc = any(pd.isna(x) for x in preds) or len(set(preds)) > 1
+                row = vs[-1].to_dict()
+                row.update(
+                    id=i, model=name, pred=rj["pred"] if esc else preds[0], escalated=bool(esc),
+                    parse_ok=bool(rj["parse_ok"] if esc else vs[0]["parse_ok"]),
+                    cost_usd=sum(v["cost_usd"] for v in vs) + (rj["cost_usd"] if esc else 0.0),
+                    latency_s=max(v["latency_s"] for v in vs) + (rj["latency_s"] if esc else 0.0),
+                    prompt_tokens=sum(v["prompt_tokens"] for v in vs) + (rj["prompt_tokens"] if esc else 0),
+                    completion_tokens=sum(v["completion_tokens"] for v in vs) + (rj["completion_tokens"] if esc else 0),
+                    reasoning_tokens=0, server_ttft_s=None,
+                )
+                rows.append(row)
+    return pd.concat([df, pd.DataFrame(rows)], ignore_index=True) if rows else df
 
 
 # ---------------------------------------------------------------- metrics
@@ -109,7 +150,7 @@ def efficiency(g: pd.DataFrame, m: dict, throughput: dict | None) -> dict:
         "out_tokens": float(g["completion_tokens"].mean()),
         "reasoning_tokens": float(g["reasoning_tokens"].mean()),
     }
-    if m.get("serving") == "serverless":
+    if str(m.get("serving", "")).startswith("serverless"):
         out["usd_per_1m_msgs"] = float(g["cost_usd"].mean() * 1e6)
         out["cost_basis"] = "serverless per-token price"
     elif m.get("serving") == "dedicated" and throughput:
@@ -193,15 +234,34 @@ def _style(ax, title: str, xlabel: str = "", ylabel: str = "") -> None:
 
 def main() -> None:
     cfg = load_config()
+    global OURS
     models = {**cfg["models"], "rules": {"label": "Rules on metadata (no model)", "serving": "local",
                                           "params_total_b": None, "role": "baseline"}}
     budgets = cfg["latency_budget_s"]
     rng = np.random.default_rng(0)
     df, notes = load_results()
+    df = add_cascades(df)
     throughput = {}
     for p in RESULTS.glob("*__throughput.json"):
         t = json.loads(p.read_text())
         throughput[t["model"]] = t
+
+    for name, (voters, judge) in CASCADES.items():
+        sel = (df["model"] == name) & (df["split"] == "test")
+        rate = df.loc[sel, "escalated"].mean() if "escalated" in df and sel.any() else float("nan")
+        who = " + ".join("DeepSeek" if "deepseek" in v else ("Nemotron+harness" if v.endswith("+knn") else "Nemotron") for v in voters)
+        models[name] = {"label": f"Router: {who} agree, else Kimi K3 ({100 * rate:.0f}% escalated)", "serving": "serverless",
+                        "params_total_b": None, "role": "ours-router"}
+    for k in sorted(set(df["model"])):
+        if k.endswith("+knn") and k not in models:
+            base = models.get(k[:-4], {})
+            models[k] = {**base, "label": base.get("label", k[:-4]) + " + retrieval harness", "role": "ours-harness"}
+    OURS = os.environ.get("PHISH_OURS") or next(
+        (k for k in ("ft-nemotron-super", "ft-meta", "nemotron-base+knn") if k in set(df.loc[df["split"] == "test", "model"])), "ft-meta")
+    if OURS in COLORS and OURS != "ft-meta":  # the hero series wears the first categorical slot
+        COLORS[OURS], COLORS["ft-meta"] = COLORS["ft-meta"], COLORS[OURS]
+    if not models.get(OURS, {}).get("label", "").endswith("[ours]"):
+        models[OURS] = {**models.get(OURS, {}), "label": models.get(OURS, {}).get("label", OURS) + " [ours]"}
 
     def label(k):
         return models.get(k, {}).get("label", k)
@@ -209,6 +269,7 @@ def main() -> None:
     ev = df[df["tag"].isin(SPLITS)]
     test = ev[(ev["split"] == "test")]
     present = [k for k in ORDER if k in set(test["model"])] + sorted(set(test["model"]) - set(ORDER))
+    present = sorted(present, key=lambda k: k != OURS)
 
     metrics: dict = {"generated_at": datetime.now(timezone.utc).isoformat(), "models": {}, "paired": {},
                      "notes": notes}
@@ -221,7 +282,9 @@ def main() -> None:
         e = efficiency(g, models.get(k, {}), throughput.get(k))
         lat_rows = df[(df["model"] == k) & (df["tag"] == "latency")]
         lat = latency(lat_rows if not lat_rows.empty else g, budgets)
-        lat["basis"] = "concurrency 1 (latency run)" if not lat_rows.empty else f"eval run (concurrent)"
+        if models.get(k, {}).get("serving") == "serverless-training":
+            lat = {"basis": "n/a: sampled inside a training session, not a serving endpoint"}
+        lat.setdefault("basis", "concurrency 1 (latency run)" if not lat_rows.empty else "eval run (concurrent)")
         per_ch = {ch: quality(gc, rng, ci=False)["f1"] for ch, gc in g.groupby("channel")}
         metrics["models"][k] = {"label": label(k), "size": _size(models.get(k, {})), "serving": models.get(k, {}).get("serving"),
                                 "variant": g["variant"].iloc[0], "quality": q, "efficiency": e, "latency": lat,
@@ -253,7 +316,7 @@ def main() -> None:
         if not gm.empty and not gt.empty:
             ablation[k] = {"f1_meta": quality(gm, rng, ci=False)["f1"], "f1_text": quality(gt, rng, ci=False)["f1"]}
         pre = ev[(ev["model"] == k) & (ev["split"] == "voice_prefix") & (ev["variant"] == "meta")]
-        if not pre.empty:
+        if len(pre) >= 270:  # only complete runs: a partial prefix set gives misleading per-step rates
             curve = {}
             for frac, gp in pre.groupby("prefix_frac"):
                 q = quality(gp, rng, ci=False)
@@ -284,6 +347,8 @@ def main() -> None:
 
 
 def make_charts(metrics: dict, keys: list[str], label) -> list[str]:
+    # charts show the core systems; router and harness variants stay in the tables
+    keys = [k for k in keys if not k.startswith("cascade") and not k.endswith("+knn")]
     out_dir = RESULTS / "charts"
     out_dir.mkdir(parents=True, exist_ok=True)
     plt.rcParams.update({"font.size": 10, "figure.facecolor": SURFACE, "savefig.facecolor": SURFACE})
@@ -293,7 +358,8 @@ def make_charts(metrics: dict, keys: list[str], label) -> list[str]:
     # 1. F1 with 95% CI on the shared test set
     ks = [k for k in keys if "f1_ci" in M[k]["quality"]]
     if ks:
-        fig, ax = plt.subplots(figsize=(7.5, 0.55 * len(ks) + 1.4))
+        fig, ax = plt.subplots(figsize=(9, 0.55 * len(ks) + 1.4))
+        ax.set_xlim(min(100 * M[k]["quality"]["f1_ci"][0] for k in ks) - 2, 101.5)
         for i, k in enumerate(reversed(ks)):
             q = M[k]["quality"]
             lo, hi = q["f1_ci"]
@@ -474,6 +540,8 @@ def write_summary(metrics: dict, keys: list[str], label, charts: list[str], budg
     L.append("- Latency: wall-clock from the client, including network. Serverless endpoints are shared; the fine-tuned model runs on a "
              "dedicated deployment, so the serving mode is listed on every row.")
     L.append("- Unparseable outputs count as wrong (a false alarm on benign items, a miss on malicious ones).")
+    L.append("- `serverless-training` rows were sampled inside a Fireworks Serverless Training session (greedy decoding, no "
+             "deployment): their cost uses published per-token sampling prices and their latency is indicative only.")
     for n in metrics.get("notes", []):
         L.append(f"- {n}")
     (RESULTS / "summary.md").write_text("\n".join(L) + "\n")

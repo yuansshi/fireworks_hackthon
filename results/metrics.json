@@ -1,6 +1,178 @@
 {
-  "generated_at": "2026-11-02T21:13:51.653026+00:00",
+  "generated_at": "2026-11-02T22:26:48.970140+00:00",
   "models": {
+    "ft-nemotron-super": {
+      "label": "Nemotron 3.5 Super 120B-A12B + LoRA [ours]",
+      "size": "120B / 12B",
+      "serving": "serverless-training",
+      "variant": "meta",
+      "quality": {
+        "n": 600,
+        "acc": 0.9783333333333334,
+        "f1": 0.9780775716694772,
+        "precision": 0.9897610921501706,
+        "recall": 0.9666666666666667,
+        "fpr": 0.01,
+        "parse_fail": 0.0,
+        "errors": 0,
+        "acc_ci": [
+          0.9666666666666667,
+          0.99
+        ],
+        "f1_ci": [
+          0.9647847697115166,
+          0.9881184460201737
+        ]
+      },
+      "efficiency": {
+        "in_tokens": 388.33,
+        "out_tokens": 8.0,
+        "reasoning_tokens": 0.0,
+        "usd_per_1m_msgs": 232.86810000000003,
+        "cost_basis": "serverless per-token price"
+      },
+      "latency": {
+        "basis": "n/a: sampled inside a training session, not a serving endpoint"
+      },
+      "per_channel_f1": {
+        "email": 0.9729729729729729,
+        "sms": 0.9726027397260273,
+        "url": 0.9664429530201343,
+        "voice": 1.0
+      }
+    },
+    "kimi-k3": {
+      "label": "Kimi K3 (2.8T)",
+      "size": "2.81T",
+      "serving": "serverless",
+      "variant": "meta",
+      "quality": {
+        "n": 600,
+        "acc": 0.9616666666666667,
+        "f1": 0.9612141652613828,
+        "precision": 0.9726962457337884,
+        "recall": 0.95,
+        "fpr": 0.02666666666666667,
+        "parse_fail": 0.0,
+        "errors": 0,
+        "acc_ci": [
+          0.9466249999999999,
+          0.975
+        ],
+        "f1_ci": [
+          0.9438558731265249,
+          0.9752963394543335
+        ]
+      },
+      "efficiency": {
+        "in_tokens": 463.7816666666667,
+        "out_tokens": 14.0,
+        "reasoning_tokens": 0.0,
+        "usd_per_1m_msgs": 1599.5765,
+        "cost_basis": "serverless per-token price"
+      },
+      "latency": {
+        "p50_s": 1.1888999999999998,
+        "p95_s": 3.66266,
+        "within_budget": 0.3557692307692308,
+        "server_ttft_p50_s": 0.7645,
+        "basis": "concurrency 1 (latency run)"
+      },
+      "per_channel_f1": {
+        "email": 0.9589041095890412,
+        "sms": 0.9729729729729729,
+        "url": 0.9251700680272109,
+        "voice": 0.9868421052631579
+      }
+    },
+    "deepseek-v4p1-flash": {
+      "label": "DeepSeek V4.1 Flash (552B)",
+      "size": "552B / 16B",
+      "serving": "serverless",
+      "variant": "meta",
+      "quality": {
+        "n": 600,
+        "acc": 0.935,
+        "f1": 0.9355371900826447,
+        "precision": 0.9278688524590164,
+        "recall": 0.9433333333333334,
+        "fpr": 0.07333333333333333,
+        "parse_fail": 0.0,
+        "errors": 0,
+        "acc_ci": [
+          0.915,
+          0.9533333333333334
+        ],
+        "f1_ci": [
+          0.9142832124093071,
+          0.9549861966390423
+        ]
+      },
+      "efficiency": {
+        "in_tokens": 420.515,
+        "out_tokens": 8.0,
+        "reasoning_tokens": 0.0,
+        "usd_per_1m_msgs": 113.81088333333332,
+        "cost_basis": "serverless per-token price"
+      },
+      "latency": {
+        "p50_s": 0.6837500000000001,
+        "p95_s": 1.0390249999999999,
+        "within_budget": 0.7980769230769231,
+        "server_ttft_p50_s": 0.4855,
+        "basis": "concurrency 1 (latency run)"
+      },
+      "per_channel_f1": {
+        "email": 0.9523809523809524,
+        "sms": 0.96,
+        "url": 0.9361702127659575,
+        "voice": 0.8982035928143712
+      }
+    },
+    "nemotron-base": {
+      "label": "Nemotron-30B-A3B base",
+      "size": "30B / 3B",
+      "serving": "serverless",
+      "variant": "meta",
+      "quality": {
+        "n": 600,
+        "acc": 0.875,
+        "f1": 0.8854961832061069,
+        "precision": 0.8169014084507042,
+        "recall": 0.9666666666666667,
+        "fpr": 0.21666666666666667,
+        "parse_fail": 0.0,
+        "errors": 0,
+        "acc_ci": [
+          0.8466666666666667,
+          0.9
+        ],
+        "f1_ci": [
+          0.859931089172518,
+          0.9113187574066923
+        ]
+      },
+      "efficiency": {
+        "in_tokens": 388.33,
+        "out_tokens": 8.096666666666666,
+        "reasoning_tokens": 0.0,
+        "usd_per_1m_msgs": 19.50343333333333,
+        "cost_basis": "serverless per-token price"
+      },
+      "latency": {
+        "p50_s": 0.30215000000000003,
+        "p95_s": 10.78033499999985,
+        "within_budget": 0.8483333333333334,
+        "server_ttft_p50_s": 0.135,
+        "basis": "eval run (concurrent)"
+      },
+      "per_channel_f1": {
+        "email": 0.8383233532934132,
+        "sms": 0.9299363057324841,
+        "url": 0.8834355828220859,
+        "voice": 0.8928571428571428
+      }
+    },
     "rules": {
       "label": "Rules on metadata (no model)",
       "size": "n/a",
@@ -16,12 +188,12 @@
         "parse_fail": 0.0,
         "errors": 0,
         "acc_ci": [
-          0.7083333333333334,
-          0.7766666666666666
+          0.706625,
+          0.775
         ],
         "f1_ci": [
-          0.7042624854819978,
-          0.7859411899411757
+          0.7060866709502391,
+          0.7819380265367072
         ]
       },
       "efficiency": {
@@ -44,22 +216,503 @@
         "url": 0.7425149700598803,
         "voice": 0.888888888888889
       }
+    },
+    "kimi-k3-reasoning": {
+      "label": "Kimi K3 (2.8T) + reasoning",
+      "size": "2.81T",
+      "serving": "serverless",
+      "variant": "meta",
+      "quality": {
+        "n": 200,
+        "acc": 0.935,
+        "f1": 0.9359605911330049,
+        "precision": 0.9223300970873787,
+        "recall": 0.95,
+        "fpr": 0.08,
+        "parse_fail": 0.0,
+        "errors": 0,
+        "acc_ci": [
+          0.9,
+          0.9651249999999999
+        ],
+        "f1_ci": [
+          0.8958333333333333,
+          0.9668246445497629
+        ]
+      },
+      "efficiency": {
+        "in_tokens": 443.935,
+        "out_tokens": 94.585,
+        "reasoning_tokens": 74.53,
+        "usd_per_1m_msgs": 2750.5800000000004,
+        "cost_basis": "serverless per-token price"
+      },
+      "latency": {
+        "p50_s": 2.81615,
+        "p95_s": 5.901514999999999,
+        "within_budget": 0.105,
+        "server_ttft_p50_s": 0.9430000000000001,
+        "basis": "eval run (concurrent)"
+      },
+      "per_channel_f1": {
+        "email": 0.9166666666666666,
+        "sms": 0.9387755102040817,
+        "url": 1.0,
+        "voice": 0.8928571428571428
+      }
+    },
+    "nemotron-base+knn": {
+      "label": "Nemotron-30B-A3B base + retrieval harness",
+      "size": "30B / 3B",
+      "serving": "serverless",
+      "variant": "meta",
+      "quality": {
+        "n": 600,
+        "acc": 0.9216666666666666,
+        "f1": 0.9240710823909531,
+        "precision": 0.896551724137931,
+        "recall": 0.9533333333333334,
+        "fpr": 0.11,
+        "parse_fail": 0.0,
+        "errors": 0,
+        "acc_ci": [
+          0.9,
+          0.9417083333333333
+        ],
+        "f1_ci": [
+          0.9,
+          0.9449548706986136
+        ]
+      },
+      "efficiency": {
+        "in_tokens": 1300.6433333333334,
+        "out_tokens": 8.163333333333334,
+        "reasoning_tokens": 0.0,
+        "usd_per_1m_msgs": 62.1321,
+        "cost_basis": "serverless per-token price"
+      },
+      "latency": {
+        "p50_s": 0.3104,
+        "p95_s": 2.555064999999998,
+        "within_budget": 0.8616666666666667,
+        "server_ttft_p50_s": 0.141,
+        "basis": "eval run (concurrent)"
+      },
+      "per_channel_f1": {
+        "email": 0.9078947368421053,
+        "sms": 0.948051948051948,
+        "url": 0.8860759493670886,
+        "voice": 0.9548387096774195
+      }
+    },
+    "cascade": {
+      "label": "Router: Nemotron + Nemotron+harness agree, else Kimi K3 (9% escalated)",
+      "size": "n/a",
+      "serving": "serverless",
+      "variant": "meta",
+      "quality": {
+        "n": 600,
+        "acc": 0.935,
+        "f1": 0.9367909238249594,
+        "precision": 0.9116719242902208,
+        "recall": 0.9633333333333334,
+        "fpr": 0.09333333333333334,
+        "parse_fail": 0.0,
+        "errors": 0,
+        "acc_ci": [
+          0.9133333333333333,
+          0.9533333333333334
+        ],
+        "f1_ci": [
+          0.9166564039408867,
+          0.9549277219137838
+        ]
+      },
+      "efficiency": {
+        "in_tokens": 1734.9583333333333,
+        "out_tokens": 17.566666666666666,
+        "reasoning_tokens": 0.0,
+        "usd_per_1m_msgs": 239.19053333333332,
+        "cost_basis": "serverless per-token price"
+      },
+      "latency": {
+        "p50_s": 0.44725,
+        "p95_s": 21.621419999999997,
+        "within_budget": 0.6833333333333333,
+        "server_ttft_p50_s": null,
+        "basis": "eval run (concurrent)"
+      },
+      "per_channel_f1": {
+        "email": 0.9271523178807947,
+        "sms": 0.954248366013072,
+        "url": 0.9044585987261147,
+        "voice": 0.9615384615384615
+      }
+    },
+    "cascade3": {
+      "label": "Router: Nemotron + Nemotron+harness + DeepSeek agree, else Kimi K3 (15% escalated)",
+      "size": "n/a",
+      "serving": "serverless",
+      "variant": "meta",
+      "quality": {
+        "n": 600,
+        "acc": 0.96,
+        "f1": 0.9601328903654486,
+        "precision": 0.956953642384106,
+        "recall": 0.9633333333333334,
+        "fpr": 0.043333333333333335,
+        "parse_fail": 0.0,
+        "errors": 0,
+        "acc_ci": [
+          0.9433333333333334,
+          0.975
+        ],
+        "f1_ci": [
+          0.94314381270903,
+          0.9747405561987615
+        ]
+      },
+      "efficiency": {
+        "in_tokens": 2181.31,
+        "out_tokens": 26.336666666666666,
+        "reasoning_tokens": 0.0,
+        "usd_per_1m_msgs": 442.0614166666666,
+        "cost_basis": "serverless per-token price"
+      },
+      "latency": {
+        "p50_s": 0.8485499999999999,
+        "p95_s": 21.621419999999997,
+        "within_budget": 0.5216666666666666,
+        "server_ttft_p50_s": null,
+        "basis": "eval run (concurrent)"
+      },
+      "per_channel_f1": {
+        "email": 0.9659863945578231,
+        "sms": 0.9668874172185431,
+        "url": 0.9395973154362416,
+        "voice": 0.967741935483871
+      }
+    },
+    "nemotron-super-base": {
+      "label": "Nemotron 3.5 Super 120B-A12B base",
+      "size": "120B / 12B",
+      "serving": "serverless-training",
+      "variant": "meta",
+      "quality": {
+        "n": 600,
+        "acc": 0.9066666666666666,
+        "f1": 0.9116719242902208,
+        "precision": 0.8652694610778443,
+        "recall": 0.9633333333333334,
+        "fpr": 0.15,
+        "parse_fail": 0.0,
+        "errors": 0,
+        "acc_ci": [
+          0.8833333333333333,
+          0.9283333333333333
+        ],
+        "f1_ci": [
+          0.8860353130016052,
+          0.9331443798449612
+        ]
+      },
+      "efficiency": {
+        "in_tokens": 388.33,
+        "out_tokens": 8.0,
+        "reasoning_tokens": 0.0,
+        "usd_per_1m_msgs": 232.86810000000003,
+        "cost_basis": "serverless per-token price"
+      },
+      "latency": {
+        "basis": "n/a: sampled inside a training session, not a serving endpoint"
+      },
+      "per_channel_f1": {
+        "email": 0.9379310344827586,
+        "sms": 0.9419354838709678,
+        "url": 0.9240506329113923,
+        "voice": 0.8522727272727273
+      }
     }
   },
-  "paired": {},
+  "paired": {
+    "kimi-k3": {
+      "n": 600,
+      "ours_only_correct": 15,
+      "baseline_only_correct": 5,
+      "mcnemar_p": 0.04138946533203125,
+      "delta_f1": 0.01686340640809436,
+      "delta_f1_ci": [
+        0.0015140450257268734,
+        0.03284307299282332
+      ]
+    },
+    "deepseek-v4p1-flash": {
+      "n": 600,
+      "ours_only_correct": 33,
+      "baseline_only_correct": 7,
+      "mcnemar_p": 4.2277022657799534e-05,
+      "delta_f1": 0.04254038158683249,
+      "delta_f1_ci": [
+        0.021982374050806774,
+        0.06494105137924161
+      ]
+    },
+    "nemotron-base": {
+      "n": 600,
+      "ours_only_correct": 70,
+      "baseline_only_correct": 8,
+      "mcnemar_p": 1.7449045276511964e-13,
+      "delta_f1": 0.09258138846337027,
+      "delta_f1_ci": [
+        0.06547045736981556,
+        0.12027981534616816
+      ]
+    },
+    "rules": {
+      "n": 600,
+      "ours_only_correct": 146,
+      "baseline_only_correct": 5,
+      "mcnemar_p": 4.4368320596084555e-37,
+      "delta_f1": 0.23220298421073138,
+      "delta_f1_ci": [
+        0.19177530286809713,
+        0.2713871179261162
+      ]
+    },
+    "kimi-k3-reasoning": {
+      "n": 200,
+      "ours_only_correct": 9,
+      "baseline_only_correct": 3,
+      "mcnemar_p": 0.14599609375,
+      "delta_f1": 0.028141972969559115,
+      "delta_f1_ci": [
+        -0.0036123740432135896,
+        0.06398568379663593
+      ]
+    },
+    "nemotron-base+knn": {
+      "n": 600,
+      "ours_only_correct": 42,
+      "baseline_only_correct": 8,
+      "mcnemar_p": 1.163555804595262e-06,
+      "delta_f1": 0.05400648927852403,
+      "delta_f1_ci": [
+        0.03042850953900985,
+        0.07640124284855562
+      ]
+    },
+    "cascade": {
+      "n": 600,
+      "ours_only_correct": 34,
+      "baseline_only_correct": 8,
+      "mcnemar_p": 6.87711149112147e-05,
+      "delta_f1": 0.04128664784451774,
+      "delta_f1_ci": [
+        0.020925967624659474,
+        0.06110950729200347
+      ]
+    },
+    "cascade3": {
+      "n": 600,
+      "ours_only_correct": 17,
+      "baseline_only_correct": 6,
+      "mcnemar_p": 0.03468966484069824,
+      "delta_f1": 0.017944681304028598,
+      "delta_f1_ci": [
+        0.0028966654974146135,
+        0.035648141374879164
+      ]
+    },
+    "nemotron-super-base": {
+      "n": 600,
+      "ours_only_correct": 50,
+      "baseline_only_correct": 7,
+      "mcnemar_p": 4.2367098440632126e-09,
+      "delta_f1": 0.06640564737925636,
+      "delta_f1_ci": [
+        0.04399773246659255,
+        0.09001533074998316
+      ]
+    }
+  },
   "notes": [],
   "temporal": {
+    "ft-nemotron-super/meta": {
+      "f1_test_email": 0.9729729729729729,
+      "f1_2008": 0.8379888268156425,
+      "f1_2008_ci": [
+        0.7734618282270215,
+        0.8914467787114846
+      ]
+    },
+    "kimi-k3/meta": {
+      "f1_test_email": 0.9589041095890412,
+      "f1_2008": 0.9148936170212766,
+      "f1_2008_ci": [
+        0.8677248677248678,
+        0.9538461538461539
+      ]
+    },
+    "kimi-k3/text": {
+      "f1_test_email": 0.9370629370629371,
+      "f1_2008": 0.8651685393258428,
+      "f1_2008_ci": [
+        0.8089826241787929,
+        0.9154228855721394
+      ]
+    },
+    "deepseek-v4p1-flash/meta": {
+      "f1_test_email": 0.9523809523809524,
+      "f1_2008": 0.8415300546448088,
+      "f1_2008_ci": [
+        0.7801260504201679,
+        0.8912523426303605
+      ]
+    },
+    "deepseek-v4p1-flash/text": {
+      "f1_test_email": 0.9444444444444444,
+      "f1_2008": 0.8379888268156425,
+      "f1_2008_ci": [
+        0.7727212602212602,
+        0.8899546581828202
+      ]
+    },
+    "nemotron-base/meta": {
+      "f1_test_email": 0.8383233532934132,
+      "f1_2008": 0.8837209302325583,
+      "f1_2008_ci": [
+        0.8401780821917808,
+        0.9237678838351484
+      ]
+    },
     "rules/meta": {
       "f1_test_email": 0.6024096385542168,
       "f1_2008": 0.669260700389105,
       "f1_2008_ci": [
-        0.6042509769865393,
-        0.7313432835820894
+        0.5999789029535865,
+        0.7345530303030303
+      ]
+    },
+    "nemotron-base+knn/meta": {
+      "f1_test_email": 0.9078947368421053,
+      "f1_2008": 0.9054726368159204,
+      "f1_2008_ci": [
+        0.86,
+        0.9433962264150944
+      ]
+    },
+    "cascade/meta": {
+      "f1_test_email": 0.9271523178807947,
+      "f1_2008": 0.9353233830845772,
+      "f1_2008_ci": [
+        0.8993949870354364,
+        0.9674493623405851
+      ]
+    },
+    "cascade3/meta": {
+      "f1_test_email": 0.9659863945578231,
+      "f1_2008": 0.9005235602094239,
+      "f1_2008_ci": [
+        0.8554582129094412,
+        0.9398907103825136
+      ]
+    },
+    "nemotron-super-base/meta": {
+      "f1_test_email": 0.9379310344827586,
+      "f1_2008": 0.8673469387755102,
+      "f1_2008_ci": [
+        0.8117604433077579,
+        0.9121062271062271
       ]
     }
   },
-  "ablation": {},
+  "ablation": {
+    "kimi-k3": {
+      "f1_meta": 0.9612141652613828,
+      "f1_text": 0.9593220338983052
+    },
+    "deepseek-v4p1-flash": {
+      "f1_meta": 0.9355371900826447,
+      "f1_text": 0.9246231155778895
+    },
+    "nemotron-base": {
+      "f1_meta": 0.8854961832061069,
+      "f1_text": 0.9343065693430657
+    }
+  },
   "early_warning": {
+    "ft-nemotron-super": {
+      "25%": {
+        "recall": 0.96,
+        "fpr": 0.02
+      },
+      "50%": {
+        "recall": 1.0,
+        "fpr": 0.0
+      },
+      "75%": {
+        "recall": 1.0,
+        "fpr": 0.0
+      },
+      "100%": {
+        "recall": 1.0,
+        "fpr": 0.0
+      }
+    },
+    "kimi-k3": {
+      "25%": {
+        "recall": 0.98,
+        "fpr": 0.14
+      },
+      "50%": {
+        "recall": 1.0,
+        "fpr": 0.2
+      },
+      "75%": {
+        "recall": 1.0,
+        "fpr": 0.08
+      },
+      "100%": {
+        "recall": 1.0,
+        "fpr": 0.04
+      }
+    },
+    "deepseek-v4p1-flash": {
+      "25%": {
+        "recall": 0.98,
+        "fpr": 0.28
+      },
+      "50%": {
+        "recall": 1.0,
+        "fpr": 0.4
+      },
+      "75%": {
+        "recall": 1.0,
+        "fpr": 0.4
+      },
+      "100%": {
+        "recall": 1.0,
+        "fpr": 0.28
+      }
+    },
+    "nemotron-base": {
+      "25%": {
+        "recall": 1.0,
+        "fpr": 0.34
+      },
+      "50%": {
+        "recall": 1.0,
+        "fpr": 0.28
+      },
+      "75%": {
+        "recall": 1.0,
+        "fpr": 0.32
+      },
+      "100%": {
+        "recall": 1.0,
+        "fpr": 0.28
+      }
+    },
     "rules": {
       "25%": {
         "recall": 0.44,
@@ -77,9 +730,107 @@
         "recall": 0.84,
         "fpr": 0.1
       }
+    },
+    "nemotron-super-base": {
+      "25%": {
+        "recall": 0.98,
+        "fpr": 0.34
+      },
+      "50%": {
+        "recall": 1.0,
+        "fpr": 0.4
+      },
+      "75%": {
+        "recall": 1.0,
+        "fpr": 0.44
+      },
+      "100%": {
+        "recall": 1.0,
+        "fpr": 0.34
+      }
     }
   },
   "ood": {
+    "ft-nemotron-super": {
+      "n": 200,
+      "acc": 0.86,
+      "f1": 0.8771929824561403,
+      "precision": 0.78125,
+      "recall": 1.0,
+      "fpr": 0.28,
+      "parse_fail": 0.0,
+      "errors": 0,
+      "acc_ci": [
+        0.81,
+        0.905
+      ],
+      "f1_ci": [
+        0.8294822560951592,
+        0.9210697940503433
+      ],
+      "urgency_subset_acc": 0.8260869565217391,
+      "hard_negative_fpr": 0.28
+    },
+    "kimi-k3": {
+      "n": 200,
+      "acc": 0.94,
+      "f1": 0.9433962264150945,
+      "precision": 0.8928571428571429,
+      "recall": 1.0,
+      "fpr": 0.12,
+      "parse_fail": 0.0,
+      "errors": 0,
+      "acc_ci": [
+        0.905,
+        0.97
+      ],
+      "f1_ci": [
+        0.9052560133365086,
+        0.9732202117572692
+      ],
+      "urgency_subset_acc": 0.9254658385093167,
+      "hard_negative_fpr": 0.12
+    },
+    "deepseek-v4p1-flash": {
+      "n": 200,
+      "acc": 0.9,
+      "f1": 0.9090909090909091,
+      "precision": 0.8333333333333334,
+      "recall": 1.0,
+      "fpr": 0.2,
+      "parse_fail": 0.0,
+      "errors": 0,
+      "acc_ci": [
+        0.86,
+        0.94
+      ],
+      "f1_ci": [
+        0.8679245283018869,
+        0.9444444444444444
+      ],
+      "urgency_subset_acc": 0.8757763975155279,
+      "hard_negative_fpr": 0.2
+    },
+    "nemotron-base": {
+      "n": 200,
+      "acc": 0.625,
+      "f1": 0.7272727272727273,
+      "precision": 0.5714285714285714,
+      "recall": 1.0,
+      "fpr": 0.75,
+      "parse_fail": 0.0,
+      "errors": 0,
+      "acc_ci": [
+        0.555,
+        0.69
+      ],
+      "f1_ci": [
+        0.6615322580645161,
+        0.7847222222222222
+      ],
+      "urgency_subset_acc": 0.5341614906832298,
+      "hard_negative_fpr": 0.75
+    },
     "rules": {
       "n": 200,
       "acc": 0.705,
@@ -94,14 +845,102 @@
         0.765
       ],
       "f1_ci": [
-        0.7107303086523866,
-        0.819548872180451
+        0.7131006504280878,
+        0.823970786516854
       ],
       "urgency_subset_acc": 0.6459627329192547,
       "hard_negative_fpr": 0.57
+    },
+    "nemotron-base+knn": {
+      "n": 200,
+      "acc": 0.74,
+      "f1": 0.7936507936507937,
+      "precision": 0.6578947368421053,
+      "recall": 1.0,
+      "fpr": 0.52,
+      "parse_fail": 0.0,
+      "errors": 0,
+      "acc_ci": [
+        0.684875,
+        0.805
+      ],
+      "f1_ci": [
+        0.7363993241900219,
+        0.8471657388579619
+      ],
+      "urgency_subset_acc": 0.6770186335403726,
+      "hard_negative_fpr": 0.52
+    },
+    "cascade": {
+      "n": 200,
+      "acc": 0.74,
+      "f1": 0.7936507936507937,
+      "precision": 0.6578947368421053,
+      "recall": 1.0,
+      "fpr": 0.52,
+      "parse_fail": 0.0,
+      "errors": 0,
+      "acc_ci": [
+        0.68,
+        0.795125
+      ],
+      "f1_ci": [
+        0.7368421052631579,
+        0.8470719440192435
+      ],
+      "urgency_subset_acc": 0.6770186335403726,
+      "hard_negative_fpr": 0.52
+    },
+    "cascade3": {
+      "n": 200,
+      "acc": 0.915,
+      "f1": 0.9216589861751151,
+      "precision": 0.8547008547008547,
+      "recall": 1.0,
+      "fpr": 0.17,
+      "parse_fail": 0.0,
+      "errors": 0,
+      "acc_ci": [
+        0.875,
+        0.95
+      ],
+      "f1_ci": [
+        0.8844221105527639,
+        0.9553571428571429
+      ],
+      "urgency_subset_acc": 0.8944099378881988,
+      "hard_negative_fpr": 0.17
+    },
+    "nemotron-super-base": {
+      "n": 200,
+      "acc": 0.855,
+      "f1": 0.8733624454148472,
+      "precision": 0.7751937984496124,
+      "recall": 1.0,
+      "fpr": 0.29,
+      "parse_fail": 0.0,
+      "errors": 0,
+      "acc_ci": [
+        0.805,
+        0.905
+      ],
+      "f1_ci": [
+        0.8185940803382664,
+        0.9145299145299145
+      ],
+      "urgency_subset_acc": 0.8198757763975155,
+      "hard_negative_fpr": 0.29
     }
   },
   "realcalls_recall": {
-    "rules": 0.5
+    "ft-nemotron-super": 1.0,
+    "kimi-k3": 1.0,
+    "deepseek-v4p1-flash": 1.0,
+    "nemotron-base": 1.0,
+    "rules": 0.5,
+    "nemotron-base+knn": 1.0,
+    "cascade": 1.0,
+    "cascade3": 1.0,
+    "nemotron-super-base": 1.0
   }
 }

@@ -1,0 +1,9 @@
+{
+  "session": "ts-00fc8e52f0b6485a89ab5f8779fb6df7",
+  "run": "run-abb2ac7094154dfb89d550f88eabe7d6",
+  "base_model": "accounts/fireworks/models/nvidia-nemotron-3p5-super-vl-120b-a12b-bf16",
+  "checkpoints": {
+    "base": "shiyuan07-sxjgaydkms/run-abb2ac7094154dfb89d550f88eabe7d6/phish-base-b2100cb7",
+    "ep1": "shiyuan07-sxjgaydkms/run-abb2ac7094154dfb89d550f88eabe7d6/phish-ep1-b2100cb7"
+  }
+}
