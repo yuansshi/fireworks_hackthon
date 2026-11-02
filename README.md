@@ -2,6 +2,8 @@
 
 **Fireworks: Deploy with Microsoft & NVIDIA** (HackerSquad, Nov 2 2026). Sponsor track: **NVIDIA Best-Use**, using an NVIDIA Nemotron 3.5 Super model LoRA-fine-tuned on Fireworks Serverless Training.
 
+**Demo video (1:46):** [`docs/video/phishguard_2min.mp4`](docs/video/phishguard_2min.mp4) · **Slides:** [`docs/slides.pdf`](docs/slides.pdf) · **Guide:** [`docs/DEMO_GUIDE.md`](docs/DEMO_GUIDE.md)
+
 ## Who it is for, and why it matters
 
 Security and fraud teams at banks, telcos and enterprises screen a flood of messages on every channel: emails, SMS, links, and phone calls that are increasingly scripted (and now deepfaked). A frontier model is accurate, but at millions of messages a day it is too slow and too expensive to run on everything, and it means sending customer data to a third party. **PhishGuard** is an open model (NVIDIA Nemotron 3.5 Super, 120B total / 12B active parameters, about 23x smaller than the 2.8T frontier baseline), fine-tuned with LoRA on Fireworks. It labels each item `malicious` or `benign` from the content plus cheap metadata (sender/link/domain facts and timing cues), fast enough to act before the click or before the call ends.

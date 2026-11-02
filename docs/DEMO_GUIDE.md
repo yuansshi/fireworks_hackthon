@@ -1,65 +1,105 @@
-# Demo video + slides: outline and how to make them
+# Demo video + slides: guide
 
-Requirements from the rules:
-- **Video under 120 s** (aim for 90–110 s); must explain the problem, show the work, and show the measured result.
-- **Finalists present live,** so the same slides double as the pitch deck.
-- Numbers on screen must come from `results/summary.md`, measured, not estimated. Show tradeoffs honestly.
+The deck and the narrated video are **generated from measured results** and are ready to upload:
 
-Owners: Kris builds the slides and records the narration; John drives the terminal demo. Start by 3:05 PM; upload by 4:00 PM.
+| Asset | Path | Notes |
+|---|---|---|
+| Video, 1:46 | `docs/video/phishguard_2min.mp4` | 1920×1080 H.264 + AAC, narrated (macOS `say`, voice Samantha); under the 2:00 limit |
+| Slides | `docs/slides.pdf` and `docs/slides/slide_01.png` … `slide_09.png` | 9 slides, 16:9; the same deck works for the live final |
+| Narration | `docs/VIDEO_SCRIPT.md` | Per-slide script with timestamps |
+| Generator | `scripts/make_media.py` | `uv run python scripts/make_media.py` rebuilds all of the above (needs Chrome, `say`, ffmpeg) |
 
----
+Every number on screen comes from `results/summary.md`: 600 identical held-out cases, 95% bootstrap CIs, paired McNemar tests.
 
-## 1. Video outline (2:00 max)
+## 1. What the judges score (from the event slides)
 
-| Time | Shot | What to say (gist) | Source |
+*"Evidence comes first."* The deck spends most of its time on the 40% criterion.
+
+| Weight | Criterion | What judges look for | Where we cover it |
 |---|---|---|---|
-| 0:00–0:12 | Slide 1: title | "Scammers hit every channel: email, SMS, links, phone calls. Screening every message with a frontier model is too slow and too expensive." | — |
-| 0:12–0:25 | Slide 2: user + problem | "Fraud teams at banks and telcos need a verdict before the click or before the call ends, at millions of messages a day." | — |
-| 0:25–0:40 | Slide 3: approach | "We fine-tuned NVIDIA Nemotron 30B-A3B with LoRA on Fireworks, using metadata and timing cues, and benchmarked it against Kimi K3 and DeepSeek V4.1 Flash on the same held-out cases." | `docs/DESIGN.md` |
-| 0:40–1:10 | **Live terminal demo** | Run the same SMS, email and call prefix through our model and Kimi K3; point at verdict, latency, cost | `make demo` |
-| 1:10–1:35 | Slide 4: results | Headline: F1 with 95% CI, $ per 1M messages, p95 latency, McNemar p-value | `results/charts/f1_ci.png`, `cost_vs_f1.png`, `latency.png` |
-| 1:35–1:48 | Slide 5: timing | Temporal drift (2008 holdout) and the call early-warning curve: "caught after X% of the call" | `temporal_drift.png`, `voice_early_warning.png` |
-| 1:48–2:00 | Slide 6: why adopt + limits | "N× cheaper, M× faster at equal quality; self-hostable open model." One line on limitations (synthetic call data, older email corpora) | `results/summary.md` |
+| 40% | Benchmark evaluation | Reliable improvement over the baseline | Slides 3, 4, 6: frozen 600-case test set; 97.8% vs 96.2% for Kimi K3; McNemar p = 0.041; ΔF1 +1.7 [+0.2, +3.3] |
+| 25% | Business value | Clear user, valuable problem and benefit | Slides 2, 9: fraud teams screening every message; $233 vs $1,600 per 1M messages; self-hostable open model |
+| 20% | Technical execution | A working, well-executed approach | Slides 5, 8: LoRA on Nemotron 3.5 Super via Serverless Training; early-warning and drift analysis |
+| 10% | Presentation & demo | Clear explanation, convincing result | Slide 7 demo; one message per slide; under 2:00 |
+| 5% | Documentation | Readable code, reproducible evaluation | README "Reproduce"; `make data` / `make report`; this guide |
 
-Rule of thumb: about 2.5 spoken words per second, so ~300 words of script in total. Write it in `docs/VIDEO_SCRIPT.md`.
+**"Make the comparison credible" (event slide), checked against our work:**
+- [x] **Keep the test fixed:** the same 600 held-out cases (plus 200 temporal, 200 out-of-distribution and 300 call-prefix cases) and the same scoring for every system. Files are hash-checked, and `report.py` refuses mismatched runs.
+- [x] **Make runs repeatable:** seeded data build (`data/manifest.json`), prompts in `src/phish/prompt.py`, settings in `config/models.yaml`, every output saved in `results/*.jsonl`.
+- [x] **Explain what improved:** both scores and the gain (slide 6), and the cost win reported together with quality.
 
-## 2. Slide outline (6 content slides + 1 backup)
+**"Five steps to a strong submission" (event slide):**
+1. Create your evaluation: four channels, malicious/benign, 600 held-out cases. Done.
+2. Establish the frontier baseline: Kimi K3 (2.8T), plus DeepSeek V4.1 Flash and a reasoning-on ceiling. Done.
+3. Engineer your system: LoRA fine-tune of NVIDIA Nemotron 3.5 Super on Fireworks. Done.
+4. Rerun the same evaluation: same cases, same prompt, same scoring. Done.
+5. Show the before & after: untuned 90.7%, then fine-tuned 97.8%, against 96.2% for Kimi K3. Done.
 
-1. **Title:** project name, one-line claim, team (John, Kris), logos used: Fireworks, NVIDIA Nemotron.
-2. **Problem and user:** multi-channel scams, who screens them, why cost and latency matter (before-the-click, live calls).
-3. **Approach:** one diagram, *HF datasets → metadata + timing features → Nemotron LoRA on Fireworks → eval harness*, plus the baselines.
-4. **Results:** one table from `results/summary.md` (model, size, F1 ± CI, $/1M msgs, p95 latency) and `f1_ci.png` or `cost_vs_f1.png`.
-5. **Timing:** `temporal_drift.png` + `voice_early_warning.png`; the per-channel latency budget hit rate.
-6. **Why adopt + tradeoffs:** business value in $; honest limitations; NVIDIA sponsor-track line; repo URL.
-7. **Backup (Q&A only):** method details: splits, dedupe and leakage guards, McNemar and bootstrap, reasoning-off vs. reasoning-on ceiling.
+## 2. Lessons from the NVIDIA reference talk ("Nemotron LoRA on Fireworks: Training, Evaluation, and Tradeoffs")
 
-Style: one message per slide, large numbers, no more than ~20 words of text per slide, charts straight from `results/charts/`.
+The NVIDIA engineer's BANKING77 deck is effectively the template the judges expect: Nemotron Lightning 30B-A3B, 320 held-out questions, base vs. base + 16 examples vs. LoRA, and the punchline *"LoRA: +22 correct vs base at the same prompt size"*. Our deck follows the same arc:
 
-## 3. How to produce them
+| Their slide | Our slide |
+|---|---|
+| One narrow task, one untouched test set (big numbers) | Slide 3: 2,400 train · 600 held-out · 4 channels |
+| Three ways to solve the same task | Slide 4: Kimi K3, DeepSeek, Nemotron untuned, Nemotron + LoRA |
+| The lightweight training run (rank, epoch, time, $) | Slide 5: rank 16 · 1 epoch · ~11 min · ~$2.20 |
+| Held-out accuracy and prompt size, one-line punchline | Slide 6: errors out of 600 (zero-based bars), accuracy, $ per 1M msgs; "+43 correct vs untuned", "43% fewer errors than Kimi K3" |
+| Inspect gains, regressions and total cost | Slide 8: early-warning gain **and** the drift regression; total project spend ≈ $8 |
 
-### Slides (about 20 min)
-- Use **Google Slides** or **Keynote** (both export PDF).
-- Insert PNGs from `results/charts/` after the final `make report` (~2:50). Do not hand-edit numbers; copy from `results/summary.md`.
-- Export a PDF to `docs/slides.pdf` and commit it (judges can see it in the repo).
+## 3. Slide by slide
 
-### Terminal demo (about 5 min to rehearse)
-```bash
-uv run python scripts/demo.py --models ft-meta kimi-k3        # same as `make demo`
-uv run python scripts/demo.py --router                        # fallback if the FT deployment is down
-uv run python scripts/demo.py --models ft-meta kimi-k3 --channel sms --text "USPS: package on hold, pay fee at ..."
-```
-- Make the terminal font large (≥ 20 pt), dark theme, window around 1280×720.
-- **Note:** `ft-meta` only works while the fine-tuned deployment exists. Record the demo **before** John deletes the deployment, or use `--router` / base models.
+| # | Slide | One message | Rubric |
+|---|---|---|---|
+| 1 | Title | A fine-tuned NVIDIA Nemotron beats a frontier model at scam screening: 97.8% vs 96.2%, ~7× cheaper | All |
+| 2 | Problem and user | Fraud teams must screen every channel before the click; frontier screening costs $1,600 per 1M messages | Business value |
+| 3 | One evaluation, frozen | 2,400 train / 600 held-out / 4 channels, plus drift and early-warning sets | Benchmark |
+| 4 | Four systems, same cases | Same prompt and scoring for every system; ours is the only change | Benchmark |
+| 5 | Lightweight training run | Rank-16 LoRA, 1 epoch, ~11 min, ~$2.20, no upload or deployment | Technical |
+| 6 | Accuracy and cost | 13 vs 23 errors (Kimi K3), p = 0.041, +43 correct vs untuned | Benchmark |
+| 7 | Demo | Held-out items: our recorded verdicts vs live Kimi K3, with $ per line; both miss one URL | Presentation |
+| 8 | Timing and tradeoff | 96% of scam calls caught after 25% of the call with 2% false alarms (Kimi K3: 14%); frontier wins on drift | Technical, honesty |
+| 9 | Why adopt | ~7× cheaper, 23× smaller, self-hostable; repo for reproduction | Business value |
 
-### Recording (about 15 min)
-- **Mac:** QuickTime Player → File → New Screen Recording (or `Cmd+Shift+5`), with the microphone on. Record slides (presenter mode) and terminal in one take, or in two clips.
-- **Cleaner option:** OBS Studio with two scenes (slides, terminal) and one mic.
-- Edit and trim in iMovie or QuickTime (Edit → Trim). Keep it **under 2:00**; check the final length before uploading.
-- Export 1080p MP4. Upload to the HackerSquad form (or YouTube/Loom unlisted, if the form takes a link); test the link in incognito.
+## 4. Video timeline (from `docs/VIDEO_SCRIPT.md`)
 
-### Checklist before uploading (by 4:00 PM)
-- [ ] Video ≤ 2:00, audio clear, numbers match `results/summary.md`
-- [ ] Shows problem, demo and measured result vs. the frontier baseline
-- [ ] Mentions tradeoffs/limitations and the NVIDIA Nemotron usage
-- [ ] `docs/slides.pdf` committed; README links to the video
-- [ ] Commit hash for the submission taken **after** the last commit (`git rev-parse HEAD`)
+| Time | Slide |
+|---|---|
+| 0:00–0:08 | 1 Title |
+| 0:08–0:23 | 2 Problem and user |
+| 0:23–0:33 | 3 One evaluation |
+| 0:33–0:42 | 4 Four systems |
+| 0:42–0:50 | 5 Training run |
+| 0:50–1:05 | 6 Accuracy and cost |
+| 1:05–1:13 | 7 Demo |
+| 1:13–1:33 | 8 Timing and tradeoff |
+| 1:33–1:46 | 9 Why adopt |
+
+Prefer a human voice? Read `docs/VIDEO_SCRIPT.md` over the slides with QuickTime (File → New Screen Recording, microphone on), keep it under 2:00, and export 1080p MP4.
+
+## 5. Live final (if selected)
+
+- Present the same 9 slides from `docs/slides.pdf`, about 15 s each.
+- **Live demo option:**
+  ```bash
+  uv run python scripts/demo.py --models ft-nemotron-super kimi-k3                # ours (recorded) vs Kimi K3 (live)
+  uv run python scripts/demo.py --models ft-nemotron-super kimi-k3 --channel sms --text "USPS: package on hold, pay fee at ..."
+  uv run python scripts/demo.py --router                                          # cheap Nemotron router, live
+  ```
+  The fine-tuned adapter was sampled inside its training session (no deployment), so its verdicts are **replayed from the evaluation run**; say so.
+- **Q&A backup answers:**
+  - *Is the baseline weakened?* Same prompt with metadata for everyone. Kimi K3 with reasoning on was also run (93.5% on a 200-case subset), lower than with reasoning off.
+  - *Why Serverless Training?* Managed fine-tuning uploads were disabled for our account. Serverless Training takes the data inline and samples the adapter in-session, with no deployment.
+  - *Generalization?* The fine-tune is weaker on a later unseen email corpus (83.8 vs 91.5 F1) and on recent synthetic scams (86.0% vs 94.0%). The fix is periodic refreshes, plus a frontier fallback for out-of-distribution traffic.
+  - *Latency?* Not claimed for the fine-tune: it ran in a training session, not on an endpoint. Kimi K3 serverless p50 is 1.19 s.
+  - *Leakage guards?* Hash dedupe across splits, URL split grouped by domain, source-identifying fields never shown to models, and CEAS-08 held out entirely.
+
+## 6. Checklist before uploading (video by 4:00 PM)
+
+- [x] Video ≤ 2:00 (1:46), audio clear, numbers match `results/summary.md`
+- [x] Shows problem, approach, demo and measured result vs. the frontier baseline
+- [x] Mentions the tradeoff (drift) and the NVIDIA Nemotron usage
+- [x] `docs/slides.pdf` committed; README links to the video and slides
+- [ ] Team names in the README Team section
+- [ ] Upload `docs/video/phishguard_2min.mp4` to the HackerSquad form (or an unlisted link), and test it in a private window
+- [ ] Commit hash taken **after** the last commit (`git rev-parse HEAD`)
