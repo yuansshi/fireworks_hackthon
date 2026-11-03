@@ -77,6 +77,21 @@ Round 2 works through the next steps listed below. Checkpoints were selected **o
   - Epoch 3 won selection by 0.1 point of dev mean, which is noise. One epoch is the better buy.
 - **Metadata is not needed once the model is fine-tuned.** Text-only matches the metadata model in distribution and on the later-corpus emails (p = 1). It is better on recent synthetic scams: 90.5% vs. 86.0%, with 9 cases only text-only got right and 0 the other way (McNemar p = 0.004). It also gives the strongest paired win over Kimi K3, and it halves the out-of-distribution gap to Kimi K3 (8 points down to 3.5). The later-corpus gap remains.
 
+### Round 3 (post-deadline): decaying learning rate, extra data, second seed
+
+Text-only, selected on dev, frozen tests. Details: [`results/round3/README.md`](results/round3/README.md) · [`results/round3/summary.md`](results/round3/summary.md). Cost: about $14.40, so about $33.10 of $50 in total.
+
+| Model | Test acc (600) | vs Kimi K3, paired | Later corpus | Recent synthetic |
+|---|---|---|---|---|
+| Decaying learning rate (2 epochs, early-stopped at 1.0) | 98.0% | ΔF1 +1.9, p = 0.027 | 84.5% | 86.5% |
+| + 600 recent emails and hard negatives (stopped at 1.5) | **98.3%** | **ΔF1 +2.2, p = 0.004** | 86.0% | 82.5% |
+| Round-2 recipe, second seed | 97.7% | ΔF1 +1.5, p = 0.078 | 85.5% | **92.5%** |
+
+- **Decay makes longer training safer, not better.** The out-of-distribution collapse becomes a gradual slide (86.5% → 81.0% by epoch 2), which early stopping on dev avoids, and it brings no later-corpus gain.
+- **Extra recent emails and hard negatives** gave the best in-distribution result, but did not close the later-corpus gap (86.0% vs. 92.0% for Kimi K3), and they cost some out-of-distribution accuracy.
+- **The text-only, one-epoch recipe replicates across seeds.** It is ahead of Kimi K3 in every text-only run (ΔF1 +1.5 to +2.2), significant in 3 of 4.
+- **Default stays the text-only, 1-epoch recipe.** The later-corpus gap needs later-year bulk-spam data or a frontier fallback, not more tuning.
+
 ## How it works
 
 ```
@@ -166,9 +181,14 @@ checkpoint is still running.
    - The submitted numbers are epoch 1, and that result reproduces.
    - LoRA alpha and targets, plus the loss curve, are now recorded.
 2. **Export and deploy an adapter.** Adapters sampled in a training session disappear when the session ends. That happened to the round-1 session (`ts-00fc8e52f0b6485a89ab5f8779fb6df7`) and to the round-2 sessions. Next time, promote the chosen checkpoint before the session ends, deploy it, and re-measure latency and cost on real serving hardware.
-3. **Sweep cheaply.** Partly done: epochs 1–3 at rank 16 and lr 1e-4, selected on dev. Still open: rank 8/16/32 × lr 5e-5/1e-4/2e-4, and a decaying learning rate with early stopping. The goal is to keep epoch 2's email-drift gain without its out-of-distribution collapse.
-4. **Close the generalization gap.** The text-only ablation is done, and it narrowed the out-of-distribution gap. Still open: add recent phishing data and hard legitimate negatives, from sources other than the test corpora, to close the later-corpus gap (85.5% vs. 92.0%).
-5. **Re-run on a second seed/split** before repeating the "beats Kimi" claim outside this 600-case set.
+3. **Sweep cheaply.** Partly done:
+   - Epochs 1–3 (round 2) and a decaying learning rate with early stopping (round 3), all selected on dev.
+   - Still open: rank 8/16/32 × lr 5e-5/2e-4.
+4. **Close the generalization gap.**
+   - The text-only ablation (round 2) narrowed the out-of-distribution gap.
+   - Recent synthetic phishing plus hard negatives (round 3) did **not** close the later-corpus gap.
+   - Still open: later-year bulk-spam email from a non-test source, or a frontier fallback for out-of-distribution traffic.
+5. **Second seed: done (round 3).** The text-only recipe replicates and stays ahead of Kimi K3 (ΔF1 +1.5, p = 0.078 on seed 7). A different **split** is still open before claiming more than "this 600-case set".
 
 ## Team, disclosures, sponsor track
 

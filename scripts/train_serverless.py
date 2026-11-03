@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 
 os.environ.setdefault("HF_HUB_DISABLE_XET", "1")  # Xet CDN is blocked on some corporate networks
@@ -209,63 +210,90 @@ def dev_accuracy(out_dir, model_key: str, variant: str) -> dict:
     return scores
 
 
+def lr_at(step: int, total: int, peak: float, schedule: str, warmup_frac: float, min_frac: float) -> float:
+    """Constant, or linear warmup then cosine decay from the peak down to min_frac * peak."""
+    if schedule == "constant":
+        return peak
+    warm = max(1, round(warmup_frac * total))
+    if step <= warm:
+        return peak * step / warm
+    progress = (step - warm) / max(1, total - warm)
+    return peak * (min_frac + (1 - min_frac) * 0.5 * (1 + math.cos(math.pi * progress)))
+
+
 def round2(run: str, variant: str, epochs: int, batch_size: int, lr: float, rank: int, seed: int,
-           train_limit: int | None = None, eval_limit: int | None = None) -> None:
+           train_limit: int | None = None, eval_limit: int | None = None, round_dir: str = "round2",
+           schedule: str = "constant", warmup_frac: float = 0.1, lr_min_frac: float = 0.1,
+           evals_per_epoch: int = 1, extra_train: str | None = None) -> None:
     """Checkpoint selection on dev data (val + later-corpus dev + recent-synthetic dev), never on test."""
-    out = RESULTS / "round2" / run
+    out = RESULTS / round_dir / run
     out.mkdir(parents=True, exist_ok=True)
     svc = service()
     tc = svc.create_lora_training_client(base_model=BASE, rank=rank, seed=seed)
     acct = os.environ["FIREWORKS_ACCOUNT_ID"]
     tok = load_tokenizer()
-    rows = read_jsonl(DATA / f"ft_{variant}_train.jsonl")[: train_limit or None]
-    datums = [to_datum(tok, r) for r in rows]
+    base_rows = read_jsonl(DATA / f"ft_{variant}_train.jsonl")
+    extra_rows = read_jsonl(DATA.parent / extra_train) if extra_train else []
+    if train_limit:  # smoke runs: a slice of each source
+        base_rows, extra_rows = base_rows[:train_limit], extra_rows[: max(1, train_limit // 4)] if extra_rows else []
+    datums = [to_datum(tok, r) for r in base_rows + extra_rows]
     n_tok = sum(d.model_input.length for d in datums)
+    steps_per_epoch = math.ceil(len(datums) / batch_size)
+    total_steps = steps_per_epoch * epochs
+    eval_every = math.ceil(steps_per_epoch / evals_per_epoch)
     settings = {"run": run, "base_model": BASE, "variant": variant, "epochs": epochs, "batch_size": batch_size,
-                "learning_rate": lr, "lr_schedule": "constant", "lora_rank": rank, **{f"lora_{k}": v for k, v in LORA_DEFAULTS.items()},
-                "seed": seed, "train_examples": len(datums), "train_tokens_per_epoch": n_tok,
+                "learning_rate": lr, "lr_schedule": schedule if schedule == "constant" else
+                f"linear warmup {warmup_frac:.0%} then cosine to {lr_min_frac:g}x peak",
+                "lora_rank": rank, **{f"lora_{k}": v for k, v in LORA_DEFAULTS.items()},
+                "seed": seed, "train_examples": len(datums), "extra_train": extra_train, "extra_examples": len(extra_rows),
+                "train_tokens_per_epoch": n_tok, "checkpoints_per_epoch": evals_per_epoch,
                 "est_train_cost_usd": round(n_tok * epochs * PRICES["train"] / 1e6, 2),
                 "session": svc.training_session_id, "training_run": tc.run_id, "loss": "cross_entropy on answer tokens only"}
     (out / "settings.json").write_text(json.dumps(settings, indent=2))
-    print(f"[{run}] session={svc.training_session_id} {len(datums)} examples, {n_tok:,} tokens/epoch, "
-          f"est ${settings['est_train_cost_usd']}", flush=True)
+    print(f"[{run}] session={svc.training_session_id} {len(datums)} examples ({len(extra_rows)} extra), "
+          f"{n_tok:,} tokens/epoch, {total_steps} steps, est ${settings['est_train_cost_usd']}", flush=True)
 
-    adam = AdamParams(learning_rate=lr, beta1=0.9, beta2=0.95, eps=1e-8, weight_decay=0.0)
     rng, step, t0 = random.Random(seed), 0, time.time()
     ckpts, dev = {}, {}
     with (out / "train_log.jsonl").open("a") as log:
         for ep in range(1, epochs + 1):
             order = list(range(len(datums)))
             rng.shuffle(order)
-            for i in range(0, len(order), batch_size):
+            for k, i in enumerate(range(0, len(order), batch_size), 1):
                 batch = [datums[j] for j in order[i:i + batch_size]]
+                step += 1
+                lr_t = lr_at(step, total_steps, lr, schedule, warmup_frac, lr_min_frac)
                 fb = tc.forward_backward(batch, "cross_entropy")
-                op = tc.optim_step(adam)
+                op = tc.optim_step(AdamParams(learning_rate=lr_t, beta1=0.9, beta2=0.95, eps=1e-8, weight_decay=0.0))
                 out_fb = fb.result()
                 op.result()
-                step += 1
-                m = {k: v for k, v in (getattr(out_fb, "metrics", None) or {}).items() if isinstance(v, (int, float))}
+                m = {key: v for key, v in (getattr(out_fb, "metrics", None) or {}).items() if isinstance(v, (int, float))}
                 tokens = m.get("response_tokens") or sum(sum(d.loss_fn_inputs["weights"].tolist()) for d in batch)
-                log.write(json.dumps({"epoch": ep, "step": step, "t_s": round(time.time() - t0, 1),
+                log.write(json.dumps({"epoch": ep, "step": step, "t_s": round(time.time() - t0, 1), "lr": lr_t,
                                       "loss_per_answer_token": round(m.get("loss:sum", 0) / max(tokens, 1), 5), **m}) + "\n")
                 log.flush()
                 if step % 10 == 0:
-                    print(f"[{run}] epoch {ep} step {step} {time.time() - t0:.0f}s loss/token "
-                          f"{m.get('loss:sum', 0) / max(tokens, 1):.4f}", flush=True)
-            name = tc.save_weights_for_sampler(f"r2-{run}-ep{ep}").result().path
-            ckpts[ep] = f"accounts/{acct}/trainingSessions/{svc.training_session_id}/checkpoints/{name}"
-            key = f"{run}-ep{ep}"
-            evaluate("", key, DEV_SPLITS, eval_limit, svc=svc, tok=tok, path_override=ckpts[ep], variant=variant, out_dir=out)
-            dev[ep] = dev_accuracy(out, key, variant)
-            print(f"[{run}] epoch {ep} dev: " + " ".join(f"{k}={v:.3f}" for k, v in dev[ep].items()), flush=True)
-            (out / "selection.json").write_text(json.dumps({"dev": dev, "checkpoints": ckpts}, indent=2))
+                    print(f"[{run}] epoch {ep} step {step}/{total_steps} {time.time() - t0:.0f}s lr {lr_t:.2e} "
+                          f"loss/token {m.get('loss:sum', 0) / max(tokens, 1):.4f}", flush=True)
+                if k % eval_every and k != steps_per_epoch:
+                    continue
+                # checkpoint, then score it on dev while the session is alive
+                label = str(ep) if evals_per_epoch == 1 else f"{step / steps_per_epoch:.1f}"
+                name = tc.save_weights_for_sampler(f"r-{run}-s{step}").result().path
+                ckpts[label] = f"accounts/{acct}/trainingSessions/{svc.training_session_id}/checkpoints/{name}"
+                key = f"{run}-ep{label}"
+                evaluate("", key, DEV_SPLITS, eval_limit, svc=svc, tok=tok, path_override=ckpts[label],
+                         variant=variant, out_dir=out)
+                dev[label] = dev_accuracy(out, key, variant)
+                print(f"[{run}] checkpoint {label} (step {step}) dev: " + " ".join(f"{a}={b:.3f}" for a, b in dev[label].items()), flush=True)
+                (out / "selection.json").write_text(json.dumps({"dev": dev, "checkpoints": ckpts}, indent=2))
 
-    best = max(dev, key=lambda e: (dev[e]["mean"], -e))  # ties go to the earlier (cheaper) epoch
+    best = max(dev, key=lambda c: (dev[c]["mean"], -float(c)))  # ties go to the earlier (cheaper) checkpoint
     (out / "selection.json").write_text(json.dumps({"selected_epoch": best, "rule": "max mean dev accuracy, ties -> earlier",
                                                      "dev": dev, "checkpoints": ckpts}, indent=2))
-    print(f"[{run}] selected epoch {best} on dev; now scoring every epoch on the frozen test sets", flush=True)
-    for ep in sorted(ckpts):  # all epochs, so the selection is auditable; the session is still alive here
-        evaluate("", f"{run}-ep{ep}", EVAL_SPLITS, eval_limit, svc=svc, tok=tok, path_override=ckpts[ep],
+    print(f"[{run}] selected checkpoint {best} on dev; now scoring every checkpoint on the frozen test sets", flush=True)
+    for label in sorted(ckpts, key=float):  # all checkpoints, so the selection is auditable; the session is still alive
+        evaluate("", f"{run}-ep{label}", EVAL_SPLITS, eval_limit, svc=svc, tok=tok, path_override=ckpts[label],
                  variant=variant, out_dir=out, concurrency=32)
     print(f"[{run}] done", flush=True)
 
@@ -287,6 +315,12 @@ if __name__ == "__main__":
     ap.add_argument("--variant", choices=["meta", "text"], default="meta", help="round2: prompt variant to train and score")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--train-limit", type=int, help="round2 smoke: use only the first N training rows")
+    ap.add_argument("--round", dest="round_dir", default="round2", help="results subdirectory, e.g. round3")
+    ap.add_argument("--schedule", choices=["constant", "cosine"], default="constant", help="learning-rate schedule")
+    ap.add_argument("--warmup-frac", type=float, default=0.1)
+    ap.add_argument("--lr-min-frac", type=float, default=0.1, help="cosine floor as a fraction of the peak")
+    ap.add_argument("--evals-per-epoch", type=int, default=1, help="checkpoints (dev-scored) per epoch")
+    ap.add_argument("--extra-train", help="extra fine-tuning JSONL (repo-relative), appended to the training rows")
     args = ap.parse_args()
     if args.cmd == "smoke":
         train(1, 32, args.lr, args.rank, limit=32, smoke=True)
@@ -294,6 +328,8 @@ if __name__ == "__main__":
         train(args.epochs, args.batch_size, args.lr, args.rank, args.limit, smoke=False)
     elif args.cmd == "round2":
         round2(args.run, args.variant, args.epochs, args.batch_size, args.lr, args.rank, args.seed,
-               train_limit=args.train_limit, eval_limit=args.limit)
+               train_limit=args.train_limit, eval_limit=args.limit, round_dir=args.round_dir, schedule=args.schedule,
+               warmup_frac=args.warmup_frac, lr_min_frac=args.lr_min_frac, evals_per_epoch=args.evals_per_epoch,
+               extra_train=args.extra_train)
     else:
         evaluate(args.ckpt, args.model_key, args.split, args.limit, concurrency=args.concurrency, path_override=args.path)

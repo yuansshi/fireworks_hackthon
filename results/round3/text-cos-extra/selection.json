@@ -1,0 +1,36 @@
+{
+  "selected_epoch": "1.5",
+  "rule": "max mean dev accuracy, ties -> earlier",
+  "dev": {
+    "0.5": {
+      "val": 0.965,
+      "dev_temporal": 0.845,
+      "dev_ood": 0.7692307692307693,
+      "mean": 0.8597435897435898
+    },
+    "1.0": {
+      "val": 0.965,
+      "dev_temporal": 0.845,
+      "dev_ood": 0.834319526627219,
+      "mean": 0.881439842209073
+    },
+    "1.5": {
+      "val": 0.975,
+      "dev_temporal": 0.85,
+      "dev_ood": 0.8284023668639053,
+      "mean": 0.8844674556213018
+    },
+    "2.0": {
+      "val": 0.975,
+      "dev_temporal": 0.85,
+      "dev_ood": 0.7692307692307693,
+      "mean": 0.8647435897435898
+    }
+  },
+  "checkpoints": {
+    "0.5": "accounts/shiyuan07-sxjgaydkms/trainingSessions/ts-4b74921748bd4758b9935ecd22030f92/checkpoints/shiyuan07-sxjgaydkms/run-0fa283ae612049ee952a9dcf34886e68/r-text-cos-extra-s47-46ebbf34",
+    "1.0": "accounts/shiyuan07-sxjgaydkms/trainingSessions/ts-4b74921748bd4758b9935ecd22030f92/checkpoints/shiyuan07-sxjgaydkms/run-0fa283ae612049ee952a9dcf34886e68/r-text-cos-extra-s94-46ebbf34",
+    "1.5": "accounts/shiyuan07-sxjgaydkms/trainingSessions/ts-4b74921748bd4758b9935ecd22030f92/checkpoints/shiyuan07-sxjgaydkms/run-0fa283ae612049ee952a9dcf34886e68/r-text-cos-extra-s141-46ebbf34",
+    "2.0": "accounts/shiyuan07-sxjgaydkms/trainingSessions/ts-4b74921748bd4758b9935ecd22030f92/checkpoints/shiyuan07-sxjgaydkms/run-0fa283ae612049ee952a9dcf34886e68/r-text-cos-extra-s188-46ebbf34"
+  }
+}

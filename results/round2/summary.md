@@ -2,21 +2,21 @@
 
 _Checkpoints were selected on dev data only: the 200-case validation split plus two fresh dev slices (200 later-corpus emails, 169 recent synthetic scams) that are disjoint from every frozen test file. Every epoch is still reported on the frozen tests so the choice can be audited._
 
-## Run `meta-r16`: meta prompt, LoRA rank 16 (alpha 32), lr 0.0001, batch 32, 3 epoch(s), seed 42
+## Run `meta-r16`: meta prompt, LoRA rank 16 (alpha 32), lr 0.0001 (constant), batch 32, 3 epoch(s), seed 42
 
 Training: 2400 examples, 944,394 tokens/epoch, est. $6.57 · session `ts-c918dbc831b2478b895915527946be92` · targets: MLP, attention, unembedding (SDK defaults)
 
-| Epoch | Dev: val | Dev: later corpus | Dev: recent synthetic | Dev mean | Test acc % [95% CI] | Test F1 % | FPR % | Errors | Later corpus acc % | Recent synthetic acc % |
+| Checkpoint (epoch) | Dev: val | Dev: later corpus | Dev: recent synthetic | Dev mean | Test acc % [95% CI] | Test F1 % | FPR % | Errors | Later corpus acc % | Recent synthetic acc % |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | 98.0 | 85.5 | 83.4 | 89.0 | 98.0 [96.7, 99.0] | 98.0 | 1.3 | 12 | 86.0 | 86.0 |
 | 2 | 97.5 | 91.0 | 58.0 | 82.2 | 97.3 [96.0, 98.7] | 97.4 | 3.3 | 16 | 91.5 | 62.5 |
 | 3 **(selected)** | 97.0 | 84.5 | 85.8 | 89.1 | 97.7 [96.3, 98.8] | 97.6 | 0.3 | 14 | 86.5 | 86.5 |
 
-## Run `text-r16`: text prompt, LoRA rank 16 (alpha 32), lr 0.0001, batch 32, 1 epoch(s), seed 42
+## Run `text-r16`: text prompt, LoRA rank 16 (alpha 32), lr 0.0001 (constant), batch 32, 1 epoch(s), seed 42
 
 Training: 2400 examples, 852,214 tokens/epoch, est. $1.98 · session `ts-9b57bdd8a16f4207bfd4ce15db1e9577` · targets: MLP, attention, unembedding (SDK defaults)
 
-| Epoch | Dev: val | Dev: later corpus | Dev: recent synthetic | Dev mean | Test acc % [95% CI] | Test F1 % | FPR % | Errors | Later corpus acc % | Recent synthetic acc % |
+| Checkpoint (epoch) | Dev: val | Dev: later corpus | Dev: recent synthetic | Dev mean | Test acc % [95% CI] | Test F1 % | FPR % | Errors | Later corpus acc % | Recent synthetic acc % |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 **(selected)** | 97.0 | 85.5 | 86.4 | 89.6 | 98.0 [96.8, 99.0] | 98.0 | 0.7 | 12 | 85.5 | 90.5 |
 

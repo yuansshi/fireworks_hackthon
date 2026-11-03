@@ -1,0 +1,15 @@
+{
+  "selected_epoch": "1",
+  "rule": "max mean dev accuracy, ties -> earlier",
+  "dev": {
+    "1": {
+      "val": 0.96,
+      "dev_temporal": 0.86,
+      "dev_ood": 0.9112426035502958,
+      "mean": 0.910414201183432
+    }
+  },
+  "checkpoints": {
+    "1": "accounts/shiyuan07-sxjgaydkms/trainingSessions/ts-132279b7813e470a90b8a70f8c92bbb3/checkpoints/shiyuan07-sxjgaydkms/run-ae5be534fd77444c8c16eb344ceb825d/r-text-seed7-s75-0c8f75df"
+  }
+}
