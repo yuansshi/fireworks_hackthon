@@ -111,6 +111,6 @@ Prefer a human voice? Read `docs/VIDEO_SCRIPT.md` over the slides with QuickTime
 - [x] Follows Problem → Tech Stack → Live Demo + Code, and shows the before/after fine-tuning numbers
 - [x] Mentions the tradeoff (drift) and the NVIDIA Nemotron usage
 - [x] `docs/slides.pdf` committed; README links to the video and slides
-- [ ] Team names in the README Team section
+- [x] Team names in the README Team section (John Shi, Kris Chai)
 - [ ] Upload `docs/video/phishguard_2min.mp4` to the HackerSquad form (or an unlisted link), and test it in a private window
 - [ ] Commit hash taken **after** the last commit (`git rev-parse HEAD`)

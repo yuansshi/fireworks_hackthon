@@ -172,7 +172,7 @@ checkpoint is still running.
 
 ## Team, disclosures, sponsor track
 
-- **Team:** _[FILL: names]_
+- **Team:** John Shi, Kris Chai
 - **Built during the event:** all code in this repository. No pre-existing project code or trained models. Round-2 code and results on this branch were added after the deadline.
 - **AI assistance:** Claude Code helped write the data pipeline, evaluation harness, report generator and round-2 tooling. The team reviewed and ran everything and owns the results.
 - **NVIDIA Best-Use track:** the submitted system *is* an NVIDIA Nemotron model (Nemotron 3.5 Super, 120B-A12B), LoRA-fine-tuned on Fireworks Serverless Training. Nemotron Lightning 30B-A3B also powers the cheapest tier of our router.

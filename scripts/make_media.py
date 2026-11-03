@@ -194,7 +194,7 @@ DECK = [
 <div class='rule'></div>
 <div class='hero' style='font-size:84px'>Fine-tuning: 90.7% <b>&rarr; 97.8%</b></div>
 <div class='sub'>Beats the frontier model Kimi K3 (96.2%) on 600 held-out cases · about 7× cheaper</div>
-<div class='note'>Team: John · Kris &nbsp;&nbsp;|&nbsp;&nbsp; """ + REPO + "</div>",
+<div class='note'>Team: John Shi · Kris Chai &nbsp;&nbsp;|&nbsp;&nbsp; """ + REPO + "</div>",
      "This is PhishGuard: an NVIDIA Nemotron model, fine-tuned on Fireworks, that catches scams across every channel."),
     (sec("1 · The problem") + """<h2>Scams hit every channel. Screening them all is too expensive.</h2><div class='rule'></div>
 <div class='stats'>
