@@ -1,0 +1,29 @@
+{
+  "selected_epoch": 3,
+  "rule": "max mean dev accuracy, ties -> earlier",
+  "dev": {
+    "1": {
+      "val": 0.98,
+      "dev_temporal": 0.855,
+      "dev_ood": 0.834319526627219,
+      "mean": 0.8897731755424063
+    },
+    "2": {
+      "val": 0.975,
+      "dev_temporal": 0.91,
+      "dev_ood": 0.5798816568047337,
+      "mean": 0.8216272189349113
+    },
+    "3": {
+      "val": 0.97,
+      "dev_temporal": 0.845,
+      "dev_ood": 0.8579881656804734,
+      "mean": 0.8909960552268245
+    }
+  },
+  "checkpoints": {
+    "1": "accounts/shiyuan07-sxjgaydkms/trainingSessions/ts-c918dbc831b2478b895915527946be92/checkpoints/shiyuan07-sxjgaydkms/run-86d4e941fadf49f395a07e52c9d1ccee/r2-meta-r16-ep1-214d2f3f",
+    "2": "accounts/shiyuan07-sxjgaydkms/trainingSessions/ts-c918dbc831b2478b895915527946be92/checkpoints/shiyuan07-sxjgaydkms/run-86d4e941fadf49f395a07e52c9d1ccee/r2-meta-r16-ep2-214d2f3f",
+    "3": "accounts/shiyuan07-sxjgaydkms/trainingSessions/ts-c918dbc831b2478b895915527946be92/checkpoints/shiyuan07-sxjgaydkms/run-86d4e941fadf49f395a07e52c9d1ccee/r2-meta-r16-ep3-214d2f3f"
+  }
+}

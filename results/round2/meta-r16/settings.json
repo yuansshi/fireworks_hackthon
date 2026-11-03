@@ -1,0 +1,21 @@
+{
+  "run": "meta-r16",
+  "base_model": "accounts/fireworks/models/nvidia-nemotron-3p5-super-vl-120b-a12b-bf16",
+  "variant": "meta",
+  "epochs": 3,
+  "batch_size": 32,
+  "learning_rate": 0.0001,
+  "lr_schedule": "constant",
+  "lora_rank": 16,
+  "lora_alpha": 32,
+  "lora_train_mlp": true,
+  "lora_train_attn": true,
+  "lora_train_unembed": true,
+  "seed": 42,
+  "train_examples": 2400,
+  "train_tokens_per_epoch": 944394,
+  "est_train_cost_usd": 6.57,
+  "session": "ts-c918dbc831b2478b895915527946be92",
+  "training_run": "run-86d4e941fadf49f395a07e52c9d1ccee",
+  "loss": "cross_entropy on answer tokens only"
+}
