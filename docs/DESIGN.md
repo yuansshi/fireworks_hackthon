@@ -1,5 +1,8 @@
 # Phishing Detection: Fine-tuned Nemotron vs. Frontier Baselines (Fireworks Deploy)
 
+> **Historical plan (written ~1 PM, Nov 2).** What was actually built differs: Nemotron 3.5 Super (120B-A12B) fine-tuned with LoRA on Fireworks Serverless Training, evaluated at the **epoch-1** checkpoint, with no deployment. See the README for the executed system and results.
+
+
 > Design doc + execution plan for **Fireworks: Deploy with Microsoft & NVIDIA** (HackerSquad, Nov 2 2026, TERRA SF). Sections marked **[FILL]** are for the team to complete as we go.
 
 ## Context
